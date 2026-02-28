@@ -1,0 +1,13 @@
+Usage: oh-my-openclaw apply [options] <preset>
+
+Apply a preset to your OpenClaw configuration
+
+Arguments:
+  preset       Preset name to apply
+
+Options:
+  --dry-run    Show what would change without applying
+  --no-backup  Skip creating a backup (use with caution)
+  --clean      Remove existing config and workspace files before applying (clean
+               install)
+  -h, --help   display help for command

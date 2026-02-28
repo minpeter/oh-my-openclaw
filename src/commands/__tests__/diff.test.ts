@@ -39,18 +39,18 @@ describe('diffCommand', () => {
     await fs.writeFile(configPath, '{}', 'utf-8');
     process.env.OPENCLAW_CONFIG_PATH = configPath;
 
-    await diffCommand('developer');
+    await diffCommand('apex');
 
     const combined = output.join('\n');
-    // developer preset has identity, agents, tools keys
+    // apex preset has identity, agents, tools keys
     expect(combined).toContain('+');
-    // Should show added keys from developer preset
+    // Should show added keys from apex preset
     expect(combined).toMatch(/identity|agents|tools/);
   });
 
   test('shows changed values with old → new format', async () => {
     const configPath = path.join(tempStateDir, 'openclaw.json');
-    // Set identity.name to something different from developer preset (DevBot)
+    // Set identity.name to something different from apex preset (Apex)
     await fs.writeFile(
       configPath,
       JSON.stringify({ identity: { name: 'OldBot', emoji: '🦞' } }),
@@ -58,13 +58,13 @@ describe('diffCommand', () => {
     );
     process.env.OPENCLAW_CONFIG_PATH = configPath;
 
-    await diffCommand('developer');
+    await diffCommand('apex');
 
     const combined = output.join('\n');
     // Should show changed value with → separator
     expect(combined).toContain('→');
     expect(combined).toContain('OldBot');
-    expect(combined).toContain('DevBot');
+    expect(combined).toContain('Apex');
   });
 
   test('shows removed keys (null) in red with - prefix', async () => {
@@ -110,7 +110,7 @@ describe('diffCommand', () => {
     );
     process.env.OPENCLAW_CONFIG_PATH = configPath;
 
-    await diffCommand('developer', { json: true });
+    await diffCommand('apex', { json: true });
 
     const jsonOutput = output.join('\n');
     const parsed = JSON.parse(jsonOutput) as {
@@ -119,13 +119,13 @@ describe('diffCommand', () => {
       workspaceFiles: { toAdd: string[]; toReplace: string[] };
     };
 
-    expect(parsed.preset).toBe('developer');
+    expect(parsed.preset).toBe('apex');
     expect(Array.isArray(parsed.changes)).toBe(true);
     expect(typeof parsed.workspaceFiles).toBe('object');
     expect(Array.isArray(parsed.workspaceFiles.toAdd)).toBe(true);
     expect(Array.isArray(parsed.workspaceFiles.toReplace)).toBe(true);
 
-    // Should have changes since OldBot != DevBot
+    // Should have changes since OldBot != Apex
     const nameChange = parsed.changes.find(c => c.path === 'identity.name');
     expect(nameChange).toBeDefined();
     expect(nameChange?.type).toBe('changed');
@@ -136,7 +136,7 @@ describe('diffCommand', () => {
     await fs.writeFile(configPath, '{}', 'utf-8');
     process.env.OPENCLAW_CONFIG_PATH = configPath;
 
-    await diffCommand('developer', { json: true });
+    await diffCommand('apex', { json: true });
 
     const jsonOutput = output.join('\n');
     const parsed = JSON.parse(jsonOutput) as {
@@ -145,10 +145,13 @@ describe('diffCommand', () => {
       workspaceFiles: { toAdd: string[]; toReplace: string[] };
     };
 
-    // developer preset has workspaceFiles: ['AGENTS.md', 'SOUL.md']
-    // Since workspace dir is empty, both should be in toAdd
+    // apex preset has 5 workspace files
+    // Since workspace dir is empty, all should be in toAdd
     expect(parsed.workspaceFiles.toAdd).toContain('AGENTS.md');
     expect(parsed.workspaceFiles.toAdd).toContain('SOUL.md');
+    expect(parsed.workspaceFiles.toAdd).toContain('TOOLS.md');
+    expect(parsed.workspaceFiles.toAdd).toContain('USER.md');
+    expect(parsed.workspaceFiles.toAdd).toContain('IDENTITY.md');
   });
 
   test('shows no differences when config matches preset', async () => {

@@ -1,0 +1,10 @@
+Usage: oh-my-openclaw install [options]
+
+Install the apex preset (shortcut for: apply apex)
+
+Options:
+  --dry-run    Show what would change without applying
+  --no-backup  Skip creating a backup (use with caution)
+  --clean      Remove existing config and workspace files before applying (clean
+               install)
+  -h, --help   display help for command

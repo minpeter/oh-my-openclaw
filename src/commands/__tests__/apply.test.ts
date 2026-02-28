@@ -294,15 +294,15 @@ describe('applyCommand', () => {
     await writeConfig(env.configPath, { identity: { name: 'ReminderBase' } });
 
     const logs = await captureLogs(async () => {
-      await applyCommand('developer');
+      await applyCommand('apex');
     });
 
     const combined = logs.join('\n');
     expect(combined).toContain("openclaw gateway restart");
-    expect(combined).toContain("Preset 'developer' applied");
+    expect(combined).toContain("Preset 'apex' applied");
 
     const config = await readConfig(env.configPath);
-    expect(config.identity).toEqual({ name: 'DevBot', theme: 'coding assistant', emoji: '💻' });
+    expect(config.identity).toEqual({ name: 'Apex', theme: 'all-in-one power assistant', emoji: '⚡' });
   });
 
   test('handles preset with only MD files (no config)', async () => {
@@ -361,5 +361,83 @@ describe('applyCommand', () => {
     });
 
     expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(false);
+  });
+
+  test('--clean removes config and workspace files before applying', async () => {
+    const env = await createTempEnv('openclaw-apply-clean-');
+
+    await writeConfig(env.configPath, { identity: { name: 'OldBot' }, untouched: { keep: true } });
+    await fs.writeFile(path.join(env.workspaceDir, 'AGENTS.md'), '# Old Agents', 'utf-8');
+    await fs.writeFile(path.join(env.workspaceDir, 'SOUL.md'), '# Old Soul', 'utf-8');
+
+    const logs = await captureLogs(async () => {
+      await applyCommand('apex', { clean: true, noBackup: true });
+    });
+
+    // Config is fresh (not merged with OldBot — 'untouched' key must be gone)
+    const config = await readConfig(env.configPath);
+    expect((config.identity as Record<string, unknown>).name).toBe('Apex');
+    expect(config.untouched).toBeUndefined();
+
+    // Workspace files are overwritten by apex preset files
+    const agentsContent = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
+    expect(agentsContent).not.toBe('# Old Agents');
+
+    const combined = logs.join('\n');
+    expect(combined).toContain('Clean install');
+  })
+
+  test('--clean creates backup before wiping', async () => {
+    const env = await createTempEnv('openclaw-apply-clean-backup-');
+
+    const beforeConfig = { identity: { name: 'BackupMe' } };
+    await writeConfig(env.configPath, beforeConfig);
+
+    await applyCommand('apex', { clean: true });
+
+    const backupEntries = await fs.readdir(env.backupsDir);
+    const configBackups = backupEntries.filter((entry) => entry.endsWith('.bak'));
+    expect(configBackups.length).toBeGreaterThanOrEqual(1);
+
+    const backupConfig = JSON5.parse(
+      await fs.readFile(path.join(env.backupsDir, configBackups[0]), 'utf-8'),
+    ) as Record<string, unknown>;
+    expect(backupConfig).toEqual(beforeConfig);
+  });
+
+  test('--clean with --dry-run does not delete anything', async () => {
+    const env = await createTempEnv('openclaw-apply-clean-dry-');
+
+    await writeConfig(env.configPath, { identity: { name: 'DryClean' } });
+    await fs.writeFile(path.join(env.workspaceDir, 'AGENTS.md'), 'original content', 'utf-8');
+
+    const logs = await captureLogs(async () => {
+      await applyCommand('apex', { clean: true, dryRun: true });
+    });
+
+    const config = await readConfig(env.configPath);
+    expect((config.identity as Record<string, unknown>).name).toBe('DryClean');
+
+    const agentsContent = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
+    expect(agentsContent).toBe('original content');
+
+    const backupEntries = await fs.readdir(env.backupsDir);
+    expect(backupEntries.length).toBe(0);
+
+    const combined = logs.join('\n');
+    expect(combined).toContain('DRY RUN');
+    expect(combined).toContain('CLEAN INSTALL');
+  });
+
+  test('install alias applies apex preset', async () => {
+    const env = await createTempEnv('openclaw-apply-install-');
+
+    await writeConfig(env.configPath, { identity: { name: 'InstallBase' } });
+
+    await applyCommand('apex', { noBackup: true });
+
+    const config = await readConfig(env.configPath);
+    expect((config.identity as Record<string, unknown>).name).toBe('Apex');
+    expect((config.identity as Record<string, unknown>).theme).toBe('all-in-one power assistant');
   });
 });

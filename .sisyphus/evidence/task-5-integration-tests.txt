@@ -1,0 +1,35 @@
+bun test v1.3.9 (cf6cdbbb)
+
+✓ Preset 'cycle-preset' exported to: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-integration-6XOsEr/.openclaw/oh-my-openclaw/presets/cycle-preset
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'cycle-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Warning: config file not found. Creating new config from preset.
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+
+✓ Preset 'empty-workspace-preset' exported to: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-integration-N49O8h/.openclaw/oh-my-openclaw/presets/empty-workspace-preset
+OK Workspace files copied: AGENTS.md
+
+OK Preset 'md-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'config-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-integration-OVtn5Y/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-49-938Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-integration-OVtn5Y/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-49-946Z.bak
+Workspace backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-integration-OVtn5Y/.openclaw/oh-my-openclaw/backups/workspace.2026-02-28T19-15-49-947Z
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.

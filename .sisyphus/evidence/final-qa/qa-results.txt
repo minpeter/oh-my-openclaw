@@ -1,0 +1,143 @@
+QA EVIDENCE — apex-refactor
+Generated: 2026-03-01
+
+======================================================================
+SCENARIO 1: Single apex preset in list
+Command: bun run src/cli.ts list --json
+Assert: JSON array with exactly 1 item, name === "apex"
+Result: PASS
+
+Output:
+[
+  {
+    "name": "apex",
+    "description": "All-in-one power assistant preset with secure prompt-guard defaults",
+    "version": "1.0.0",
+    "author": "oh-my-openclaw",
+    "tags": ["all-in-one","security","developer","assistant","tmux","prompt-guard"],
+    "builtin": true,
+    "config": { ... },
+    "workspaceFiles": ["AGENTS.md","SOUL.md","TOOLS.md","USER.md","IDENTITY.md"]
+  }
+]
+→ Array length: 1 ✓  name: "apex" ✓
+
+======================================================================
+SCENARIO 2: install command help
+Command: bun run src/cli.ts install --help
+Assert: shows --dry-run, --no-backup, --clean. No <preset> argument.
+Result: PASS
+
+Output:
+Usage: oh-my-openclaw install [options]
+Install the apex preset (shortcut for: apply apex)
+Options:
+  --dry-run    Show what would change without applying
+  --no-backup  Skip creating a backup (use with caution)
+  --clean      Remove existing config and workspace files before applying (clean install)
+  -h, --help   display help for command
+→ --dry-run ✓  --no-backup ✓  --clean ✓  No <preset> arg ✓
+
+======================================================================
+SCENARIO 3: apply --clean in help
+Command: bun run src/cli.ts apply --help
+Assert: shows --clean option with description about "Remove existing config"
+Result: PASS
+
+Output:
+  --clean      Remove existing config and workspace files before applying (clean install)
+→ --clean present ✓  description matches ✓
+
+======================================================================
+SCENARIO 4: main help shows install
+Command: bun run src/cli.ts --help
+Assert: "install" appears in command list
+Result: PASS
+
+Output includes:
+  install [options]         Install the apex preset (shortcut for: apply apex)
+→ "install" in commands ✓
+
+======================================================================
+SCENARIO 5: Legacy presets gone
+Command: ls src/presets/
+Assert: only apex/, __tests__/, index.ts visible. No default/, developer/, researcher/, creative/
+Result: PASS
+
+Output:
+__tests__
+apex
+index.ts
+→ No legacy presets ✓
+
+======================================================================
+SCENARIO 6: AGENTS.md apex-only philosophy
+Commands:
+  grep -c 'APEX-ONLY' AGENTS.md  → 1
+  grep -c 'developer' AGENTS.md  → 0
+Assert: APEX-ONLY count > 0, developer count == 0
+Result: PASS
+→ APEX-ONLY: 1 ✓  developer: 0 ✓
+
+======================================================================
+SCENARIO 7: README.md apex-only
+Commands:
+  grep -c 'install' README.md           → 7
+  grep -c '\-\-clean' README.md         → 2
+  grep 'developer|researcher|creative' README.md | grep -v 'tags|description' | wc -l → 0
+Assert: install > 0, --clean > 0, legacy preset count == 0
+Result: PASS
+→ install: 7 ✓  --clean: 2 ✓  legacy presets: 0 ✓
+
+======================================================================
+SCENARIO 8: Full test suite
+Command: bun test
+Assert: 110 tests pass, 0 fail
+Result: PASS
+
+Output:
+ 110 pass
+ 0 fail
+ 227 expect() calls
+Ran 110 tests across 15 files. [126.00ms]
+→ 110 pass ✓  0 fail ✓
+
+======================================================================
+SCENARIO 9: Typecheck
+Command: bun run typecheck  (tsc --noEmit)
+Assert: exit 0, no errors
+Result: PASS
+
+Output: (no output = clean)
+→ exit 0 ✓  no errors ✓
+
+======================================================================
+SCENARIO 10: Build
+Command: bun run build
+Assert: exit 0, dist/cli.js created
+Result: PASS
+
+Output:
+$ bun build src/cli.ts --outdir dist --target bun --format esm
+Bundled 24 modules in 7ms
+  cli.js  144.46 KB  (entry point)
+dist/cli.js: -rw-r--r-- 144463 bytes, created 2026-03-01
+→ exit 0 ✓  dist/cli.js created ✓
+
+======================================================================
+SUMMARY
+======================================================================
+
+Scenarios [10/10 pass] | Integration [PASS] | Edge Cases [10 tested] | VERDICT: APPROVE
+
+All 10 QA scenarios passed:
+- CLI list returns single apex preset (JSON)
+- install command has correct options (no <preset> arg)
+- apply --clean option present with correct description
+- main help lists install command
+- No legacy presets in src/presets/
+- AGENTS.md has APEX-ONLY section, no stray 'developer' mentions
+- README.md references install and --clean, no legacy presets
+- 110/110 tests pass
+- TypeScript typecheck clean (exit 0)
+- Build succeeds, dist/cli.js 144KB

@@ -7,7 +7,7 @@ import type { PresetManifest } from '../core/types';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function loadBuiltinPresets(): Promise<PresetManifest[]> {
-  const presetNames = ['default', 'developer', 'researcher', 'creative', 'apex'];
+  const presetNames = ['apex'];
   const presets: PresetManifest[] = [];
 
   for (const name of presetNames) {

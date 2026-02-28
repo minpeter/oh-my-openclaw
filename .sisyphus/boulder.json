@@ -1,14 +1,10 @@
 {
-"active_plan": "/Users/minpeter/github.com/minpeter/oh-my-openclaw/.sisyphus/plans/oh-my-openclaw.md",
-  "started_at": "2026-02-28T16:44:21.756Z",
-  "completed_at": "2026-03-01T00:00:00.000Z",
-  "status": "completed",
-"session_ids": [
-"ses_35b071bd0ffey1SGIgdJFTRg4h"
-],
-"plan_name": "oh-my-openclaw",
-"agent": "atlas",
-  "worktree_path": "/Users/minpeter/github.com/minpeter/oh-my-openclaw",
-  "tasks_total": 119,
-  "tasks_completed": 119
+  "active_plan": "/Users/minpeter/github.com/minpeter/oh-my-openclaw/.sisyphus/plans/apex-refactor.md",
+  "started_at": "2026-02-28T19:05:20.311Z",
+  "session_ids": [
+    "ses_35a8dbcefffeZB10zOqubW32FJ"
+  ],
+  "plan_name": "apex-refactor",
+  "agent": "atlas",
+  "worktree_path": "/Users/minpeter/github.com/minpeter/oh-my-openclaw"
 }

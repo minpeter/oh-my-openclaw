@@ -1,0 +1,30 @@
+Task 5 Verification Evidence
+Date: 2026-03-01
+
+Command: bun test
+Result: PASS
+Key output:
+- 106 pass
+- 0 fail
+- Ran 106 tests across 15 files
+
+Command: bun run typecheck
+Result: PASS
+Key output:
+- $ tsc --noEmit
+
+Command: bun src/cli.ts list
+Result: PASS
+Key output excerpt:
+- apex [builtin]
+- All-in-one power assistant preset with secure prompt-guard defaults
+- v1.0.0
+
+Command: bun run build
+Result: PASS
+Key output:
+- bun build src/cli.ts --outdir dist --target bun --format esm
+- Bundled 24 modules in 47ms
+
+Created test file:
+- src/presets/__tests__/apex.test.ts

@@ -1,0 +1,38 @@
+bun test v1.3.9 (cf6cdbbb)
+
+src/commands/__tests__/apply.test.ts:
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-merge-HNvd7S/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-53-616Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'merge-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-ws-copy-eUV9ck/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-53-618Z.bak
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'workspace-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-backup-Kf8FP5/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-53-620Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'backup-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-sensitive-I4utvS/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-53-624Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'sensitive-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-md-only-IZhkA6/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-53-628Z.bak
+OK Workspace files copied: AGENTS.md
+
+OK Preset 'md-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-config-only-tdWZcN/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-02-28T19-15-53-630Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'config-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+
+ 8 pass
+ 0 fail
+ 19 expect() calls
+Ran 8 tests across 1 file. [33.00ms]

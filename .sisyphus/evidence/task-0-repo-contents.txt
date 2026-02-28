@@ -1,0 +1,6 @@
+AGENTS.md
+README.md
+SOUL.md
+preset.json5
+
+PRESET_MATCH=YES

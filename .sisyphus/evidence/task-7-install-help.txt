@@ -1,0 +1,15 @@
+Usage: oh-my-openclaw [options] [command]
+
+OpenClaw configuration preset manager
+
+Options:
+  -V, --version             output the version number
+  -h, --help                display help for command
+
+Commands:
+  list [options]            List available presets
+  apply [options] <preset>  Apply a preset to your OpenClaw configuration
+  export [options] <name>   Export current OpenClaw configuration as a preset
+  diff [options] <preset>   Show diff between current config and a preset
+  install [options]         Install the apex preset (shortcut for: apply apex)
+  help [command]            display help for command

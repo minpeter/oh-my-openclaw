@@ -1,0 +1,7 @@
+-rw-r--r--@ 1 minpeter  staff   615 Mar  1 03:37 src/presets/apex/IDENTITY.md
+-rw-r--r--@ 1 minpeter  staff  2134 Mar  1 03:37 src/presets/apex/SOUL.md
+-rw-r--r--@ 1 minpeter  staff  1555 Mar  1 03:38 src/presets/apex/USER.md
+---
+## Adaptive Communication
+- Adapt to the user's current state. If the user is terse and rushing, provide concise, high-impact responses.
+- Be aware of your current channel context (Slack, Discord, Terminal) and adapt your output formatting to fit perfectly.

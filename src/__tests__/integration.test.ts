@@ -97,11 +97,11 @@ describe('integration workflow and edge cases', () => {
   });
 
   test('apply to nonexistent config creates new file', async () => {
-    await applyCommand('developer', { noBackup: true });
+    await applyCommand('apex', { noBackup: true });
 
     const createdConfig = await readJson5File(configPath);
     const identity = createdConfig.identity as Record<string, unknown> | undefined;
-    expect(identity?.name).toBe('DevBot');
+    expect(identity?.name).toBe('Apex');
   });
 
   test('export from empty workspace stores empty workspaceFiles list', async () => {
@@ -184,9 +184,9 @@ describe('integration workflow and edge cases', () => {
   test('multiple applies in sequence each create a backup', async () => {
     await writeJson5File(configPath, { identity: { name: 'BackupBot' } });
 
-    await applyCommand('developer');
+    await applyCommand('apex');
     await sleep(5);
-    await applyCommand('researcher');
+    await applyCommand('apex');
 
     const paths = await resolveOpenClawPaths();
     const backups = await listBackups(paths.backupsDir);

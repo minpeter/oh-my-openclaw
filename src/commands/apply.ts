@@ -6,6 +6,7 @@ import pc from 'picocolors';
 
 import { createBackup, createWorkspaceBackup } from '../core/backup';
 import { resolveOpenClawPaths } from '../core/config-path';
+import { WORKSPACE_FILES } from '../core/constants';
 import { readJson5, writeJson5 } from '../core/json5-utils';
 import { deepMerge } from '../core/merge';
 import { loadPreset } from '../core/preset-loader';
@@ -17,6 +18,7 @@ import type { PresetManifest } from '../core/types';
 interface ApplyOptions {
   dryRun?: boolean;
   noBackup?: boolean;
+  clean?: boolean;
 }
 
 function resolveBuiltinPresetDir(presetName: string): string {
@@ -57,16 +59,51 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
     configExists = true;
   } catch {}
 
+  const workspaceDir = resolveWorkspaceDir(currentConfig, paths.stateDir);
+
+  if (options.clean && !options.dryRun) {
+    if (!options.noBackup && configExists) {
+      const backupPath = await createBackup(paths.configPath, paths.backupsDir);
+      console.log(pc.dim(`Backup created: ${backupPath}`));
+    }
+    if (!options.noBackup) {
+      const existingWorkspaceFiles = await listWorkspaceFiles(workspaceDir);
+      if (existingWorkspaceFiles.length > 0) {
+        const workspaceBackupPath = await createWorkspaceBackup(
+          workspaceDir,
+          paths.backupsDir,
+          existingWorkspaceFiles,
+        );
+        console.log(pc.dim(`Workspace backup created: ${workspaceBackupPath}`));
+      }
+    }
+
+    for (const filename of WORKSPACE_FILES) {
+      try {
+        await fs.unlink(path.join(workspaceDir, filename));
+      } catch {}
+    }
+
+    try {
+      await fs.unlink(paths.configPath);
+    } catch {}
+
+    currentConfig = {};
+    configExists = false;
+    console.log(pc.yellow('Clean install: existing config and workspace files removed.'));
+  }
+
   let mergedConfig = currentConfig;
   if (hasPresetConfig(preset)) {
     const filteredPresetConfig = filterSensitiveFields(preset.config as Record<string, unknown>);
     mergedConfig = deepMerge(currentConfig, filteredPresetConfig);
   }
 
-  const workspaceDir = resolveWorkspaceDir(currentConfig, paths.stateDir);
-
   if (options.dryRun) {
     console.log(pc.bold(pc.yellow('DRY RUN - no files will be modified\n')));
+    if (options.clean) {
+      console.log(pc.yellow('Mode: CLEAN INSTALL'));
+    }
     console.log(`Preset: ${pc.bold(preset.name)} (${preset.description})`);
     if (hasPresetConfig(preset)) {
       console.log(`Config changes: ${Object.keys(preset.config as Record<string, unknown>).length} top-level keys`);
@@ -78,20 +115,22 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
     return;
   }
 
-  if (!options.noBackup && configExists) {
-    const backupPath = await createBackup(paths.configPath, paths.backupsDir);
-    console.log(pc.dim(`Backup created: ${backupPath}`));
-  }
+  if (!options.clean) {
+    if (!options.noBackup && configExists) {
+      const backupPath = await createBackup(paths.configPath, paths.backupsDir);
+      console.log(pc.dim(`Backup created: ${backupPath}`));
+    }
 
-  if (!options.noBackup && preset.workspaceFiles?.length) {
-    const existingWorkspaceFiles = await listWorkspaceFiles(workspaceDir);
-    if (existingWorkspaceFiles.length > 0) {
-      const workspaceBackupPath = await createWorkspaceBackup(
-        workspaceDir,
-        paths.backupsDir,
-        existingWorkspaceFiles,
-      );
-      console.log(pc.dim(`Workspace backup created: ${workspaceBackupPath}`));
+    if (!options.noBackup && preset.workspaceFiles?.length) {
+      const existingWorkspaceFiles = await listWorkspaceFiles(workspaceDir);
+      if (existingWorkspaceFiles.length > 0) {
+        const workspaceBackupPath = await createWorkspaceBackup(
+          workspaceDir,
+          paths.backupsDir,
+          existingWorkspaceFiles,
+        );
+        console.log(pc.dim(`Workspace backup created: ${workspaceBackupPath}`));
+      }
     }
   }
 

@@ -23,9 +23,10 @@ Prerequisites: [Bun](https://bun.sh)
 
 ### Basic Workflow
 1. **List** available presets: `oh-my-openclaw list`
-2. **Diff** a preset against your current config: `oh-my-openclaw diff developer`
-3. **Apply** the preset: `oh-my-openclaw apply developer`
-4. **Export** your current setup as a new preset: `oh-my-openclaw export my-custom-setup`
+2. **Diff** a preset against your current config: `oh-my-openclaw diff apex`
+3. **Apply** the preset: `oh-my-openclaw apply apex`
+4. **Install** apex quickly: `oh-my-openclaw install`
+5. **Export** your current setup as a new preset: `oh-my-openclaw export my-custom-setup`
 
 ## Commands
 
@@ -38,12 +39,8 @@ oh-my-openclaw list
 ```
 Available presets:
 
-  default [builtin]
-    Clean default OpenClaw configuration (default, minimal)
-    v1.0.0
-
-  developer [builtin]
-    Full-stack developer setup with elevated tools and coding-optimized model (coding, developer, elevated)
+  apex [builtin]
+    All-in-one power assistant with full capabilities (all-in-one, power, assistant)
     v1.0.0
 ```
 
@@ -56,6 +53,17 @@ oh-my-openclaw apply <preset> [options]
 - **Flags:**
   - `--dry-run`: Show what would change without making any modifications.
   - `--no-backup`: Skip creating a backup of your current configuration (default: backups are created).
+  - `--clean`: Remove existing config and workspace files before applying (clean install).
+
+### install
+Installs the apex preset (shortcut for `apply apex`).
+```bash
+oh-my-openclaw install [options]
+```
+- **Flags:**
+  - `--dry-run`: Show what would change without making any modifications.
+  - `--no-backup`: Skip creating a backup.
+  - `--clean`: Remove existing config and workspace files before applying.
 
 ### export
 Saves your current `openclaw.json` and workspace markdown files as a new reusable preset.
@@ -80,10 +88,7 @@ oh-my-openclaw diff <preset> [options]
 
 | Name | Description | Use Case |
 | :--- | :--- | :--- |
-| **default** | Clean default OpenClaw configuration | A fresh start with standard settings. |
-| **developer** | Full-stack setup with elevated tools | Coding, debugging, and system operations. |
-| **researcher** | Research-focused with web search tools | Information gathering and synthesis. |
-| **creative** | Image generation and creative models | Brainstorming and artistic exploration. |
+| **apex** | All-in-one power assistant with full capabilities | The single built-in preset with 100% of all capabilities. |
 
 ## How It Works
 
@@ -133,7 +138,7 @@ Presets are stored in `~/.openclaw/oh-my-openclaw/`. You can create them manuall
 
 ## Architecture
 - `src/core/`: Core logic including merge strategy, backup system, and sensitive field filtering.
-- `src/commands/`: CLI command implementations (`list`, `apply`, `export`, `diff`).
+- `src/commands/`: CLI command implementations (`list`, `apply`, `export`, `diff`, `install`).
 - `src/presets/`: Built-in preset templates and manifests.
 
 ## License

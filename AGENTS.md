@@ -6,7 +6,7 @@
 
 ## OVERVIEW
 
-CLI tool for managing [OpenClaw](https://github.com/minpeter/openclaw) configuration presets. Bun + TypeScript + Commander.js. Merges JSON5 config overrides and copies workspace markdown files (AGENTS.md, SOUL.md, etc.) with a single command.
+CLI tool for managing [OpenClaw](https://github.com/minpeter/openclaw) configuration presets. Bun + TypeScript + Commander.js. Provides 5 subcommands (`list`, `apply`, `export`, `diff`, `install`) to merge JSON5 config overrides and copy workspace markdown files (AGENTS.md, SOUL.md, etc.).
 
 ## STRUCTURE
 
@@ -14,17 +14,14 @@ CLI tool for managing [OpenClaw](https://github.com/minpeter/openclaw) configura
 oh-my-openclaw/
 ├── bin/oh-my-openclaw.js   # Bun shebang launcher (imports src/cli.ts directly)
 ├── src/
-│   ├── cli.ts              # CLI entry — Commander program + 4 subcommands
-│   ├── commands/            # list, apply, export, diff implementations
+│   ├── cli.ts              # CLI entry — Commander program + 5 subcommands
+│   ├── commands/            # list, apply, export, diff, install implementations
 │   │   └── __tests__/       # Command-level tests
 │   ├── core/                # Shared logic (merge, backup, filter, config resolution)
 │   │   └── __tests__/       # Unit tests per core module
 │   └── presets/             # Built-in preset templates
 │       ├── index.ts         # Loads + caches built-in presets
-│       ├── default/         # preset.json5 + AGENTS.md + SOUL.md
-│       ├── developer/
-│       ├── researcher/
-│       └── creative/
+│       └── apex/            # preset.json5 + workspace markdown files
 ├── dist/                    # Build output (gitignored)
 └── .sisyphus/               # Build orchestration artifacts (internal)
 ```
@@ -38,7 +35,7 @@ oh-my-openclaw/
 | Modify sensitive field filtering | `src/core/sensitive-filter.ts` | Glob-pattern matching on key paths |
 | Change config path resolution | `src/core/config-path.ts` | Env var overrides: `OPENCLAW_CONFIG_PATH` > `OPENCLAW_STATE_DIR` > `~/.openclaw/` |
 | Add workspace file types | `src/core/constants.ts` | `WORKSPACE_FILES` array |
-| Add built-in presets | `src/presets/` | Create dir with `preset.json5` + MD files, add name to `index.ts` array |
+| Add built-in presets | `src/presets/` | Built-in is apex-only; use user presets (`~/.openclaw/oh-my-openclaw/presets/<name>/`) for sharing custom variants |
 | Understand backup flow | `src/core/backup.ts` | Timestamped copies to `~/.openclaw/oh-my-openclaw/backups/` |
 | Read/write JSON5 configs | `src/core/json5-utils.ts` | Wraps `json5` package with `ConfigSnapshot` type |
 
@@ -73,6 +70,15 @@ Inputs are never mutated — always returns new object.
 2. Built-in presets: `src/presets/<name>/`
 3. User presets with same name **override** built-ins.
 4. Sensitive fields (`auth`, `env`, `meta`, `*.apiKey`, `*.botToken`, etc.) are **stripped** on export/diff.
+
+## APEX-ONLY PHILOSOPHY
+
+This repo manages exactly **ONE** built-in preset: **apex**.
+
+- Apex includes 100% of all capabilities (identity, tools, models, workspace files)
+- Other presets can be shared as user presets (e.g., `minpeter/demo-assistant`)
+- User presets go to `~/.openclaw/oh-my-openclaw/presets/<name>/`
+- Use `oh-my-openclaw install` to apply apex in one command
 
 ## ANTI-PATTERNS
 

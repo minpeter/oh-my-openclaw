@@ -39,11 +39,13 @@ program
   .argument('<preset>', 'Preset name to apply')
   .option('--dry-run', 'Show what would change without applying')
   .option('--no-backup', 'Skip creating a backup (use with caution)')
-  .action(async (preset: string, options: { dryRun?: boolean; backup?: boolean }) => {
+  .option('--clean', 'Remove existing config and workspace files before applying (clean install)')
+  .action(async (preset: string, options: { dryRun?: boolean; backup?: boolean; clean?: boolean }) => {
     try {
       await applyCommand(preset, {
         dryRun: options.dryRun,
         noBackup: !options.backup,
+        clean: options.clean,
       });
     } catch (err) {
       console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
@@ -84,6 +86,25 @@ program
   .action(async (preset: string, options: { json?: boolean }) => {
     try {
       await diffCommand(preset, { json: options.json });
+    } catch (err) {
+      console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('install')
+  .description('Install the apex preset (shortcut for: apply apex)')
+  .option('--dry-run', 'Show what would change without applying')
+  .option('--no-backup', 'Skip creating a backup (use with caution)')
+  .option('--clean', 'Remove existing config and workspace files before applying (clean install)')
+  .action(async (options: { dryRun?: boolean; backup?: boolean; clean?: boolean }) => {
+    try {
+      await applyCommand('apex', {
+        dryRun: options.dryRun,
+        noBackup: !options.backup,
+        clean: options.clean,
+      });
     } catch (err) {
       console.error(`Error: ${err instanceof Error ? err.message : String(err)}`);
       process.exit(1);

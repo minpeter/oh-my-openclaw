@@ -1,0 +1,15 @@
+Task 9 Evidence - AGENTS.md apex-only philosophy update
+Date: 2026-03-01
+
+Verification commands:
+1) grep -c 'developer\|researcher\|creative' AGENTS.md
+Result: 0
+
+2) grep -c 'developer' AGENTS.md
+Result: 0
+
+Notes:
+- Updated OVERVIEW to mention 5 subcommands: list, apply, export, diff, install
+- Updated STRUCTURE tree to apex-only preset directory
+- Added APEX-ONLY PHILOSOPHY section after PRESET RESOLUTION ORDER
+- Updated WHERE TO LOOK built-in presets guidance to apex-only + user preset sharing
