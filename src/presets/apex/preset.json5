@@ -1,0 +1,42 @@
+{
+  name: 'apex',
+  description: 'All-in-one power assistant preset with secure prompt-guard defaults',
+  version: '1.0.0',
+  author: 'oh-my-openclaw',
+  tags: ['all-in-one', 'security', 'developer', 'assistant', 'tmux', 'prompt-guard'],
+  builtin: true,
+  config: {
+    identity: {
+      name: 'Apex',
+      theme: 'all-in-one power assistant',
+      emoji: '⚡',
+    },
+    agents: {
+      defaults: {
+        model: {
+          primary: 'anthropic/claude-sonnet-4-5',
+        },
+      },
+    },
+    tools: {
+      allow: [
+        'exec',
+        'process',
+        'read',
+        'write',
+        'edit',
+        'apply_patch',
+        'browser',
+        'web_search',
+        'web_fetch',
+        'cron',
+        'image',
+        'memory_search',
+        'memory_get',
+        'message',
+        'canvas',
+      ],
+    },
+  },
+  workspaceFiles: ['AGENTS.md', 'SOUL.md', 'TOOLS.md', 'USER.md', 'IDENTITY.md'],
+}
