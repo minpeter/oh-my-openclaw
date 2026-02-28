@@ -1,0 +1,9 @@
+Diff: current config vs 'developer' preset
+
+  ~ identity.name: "OldBot" → "DevBot"
+  ~ identity.emoji: "🦞" → "💻"
+  + identity.theme: "coding assistant"
+  ~ tools.allow: ["read"] → ["exec","process","read","write","edit","apply_patch"]
+  + agents: {"defaults":{"model":{"primary":"anthropic/claude-sonnet-4-5"}}}
+
+  + Workspace files to add: AGENTS.md, SOUL.md

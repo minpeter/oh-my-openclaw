@@ -1,0 +1,189 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+
+import { diffCommand } from '../diff';
+
+describe('diffCommand', () => {
+  let output: string[] = [];
+  const originalLog = console.log;
+  let tempStateDir: string;
+
+  beforeEach(async () => {
+    output = [];
+    console.log = (...args: unknown[]) => {
+      output.push(args.map(String).join(' '));
+    };
+
+    tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openclaw-diff-test-'));
+    process.env.OPENCLAW_STATE_DIR = tempStateDir;
+    delete process.env.OPENCLAW_CONFIG_PATH;
+  });
+
+  afterEach(async () => {
+    console.log = originalLog;
+
+    delete process.env.OPENCLAW_STATE_DIR;
+    delete process.env.OPENCLAW_CONFIG_PATH;
+
+    if (tempStateDir) {
+      await fs.rm(tempStateDir, { recursive: true, force: true });
+    }
+  });
+
+  test('shows added keys (green +) when current config is missing preset keys', async () => {
+    // Empty config — all preset keys will be "added"
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(configPath, '{}', 'utf-8');
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await diffCommand('developer');
+
+    const combined = output.join('\n');
+    // developer preset has identity, agents, tools keys
+    expect(combined).toContain('+');
+    // Should show added keys from developer preset
+    expect(combined).toMatch(/identity|agents|tools/);
+  });
+
+  test('shows changed values with old → new format', async () => {
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    // Set identity.name to something different from developer preset (DevBot)
+    await fs.writeFile(
+      configPath,
+      JSON.stringify({ identity: { name: 'OldBot', emoji: '🦞' } }),
+      'utf-8',
+    );
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await diffCommand('developer');
+
+    const combined = output.join('\n');
+    // Should show changed value with → separator
+    expect(combined).toContain('→');
+    expect(combined).toContain('OldBot');
+    expect(combined).toContain('DevBot');
+  });
+
+  test('shows removed keys (null) in red with - prefix', async () => {
+    // Create a custom preset with null value (meaning delete)
+    const presetsDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'test-remove');
+    await fs.mkdir(presetsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(presetsDir, 'preset.json5'),
+      JSON.stringify({
+        name: 'test-remove',
+        description: 'Test preset with removal',
+        version: '1.0.0',
+        config: {
+          identity: null,
+        },
+      }),
+      'utf-8',
+    );
+
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify({ identity: { name: 'SomeBot' } }),
+      'utf-8',
+    );
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await diffCommand('test-remove');
+
+    const combined = output.join('\n');
+    // Should show removed key with - prefix
+    expect(combined).toContain('-');
+    expect(combined).toContain('identity');
+    expect(combined).toContain('SomeBot');
+  });
+
+  test('--json produces valid JSON diff', async () => {
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify({ identity: { name: 'OldBot' } }),
+      'utf-8',
+    );
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await diffCommand('developer', { json: true });
+
+    const jsonOutput = output.join('\n');
+    const parsed = JSON.parse(jsonOutput) as {
+      preset: string;
+      changes: Array<{ path: string; type: string }>;
+      workspaceFiles: { toAdd: string[]; toReplace: string[] };
+    };
+
+    expect(parsed.preset).toBe('developer');
+    expect(Array.isArray(parsed.changes)).toBe(true);
+    expect(typeof parsed.workspaceFiles).toBe('object');
+    expect(Array.isArray(parsed.workspaceFiles.toAdd)).toBe(true);
+    expect(Array.isArray(parsed.workspaceFiles.toReplace)).toBe(true);
+
+    // Should have changes since OldBot != DevBot
+    const nameChange = parsed.changes.find(c => c.path === 'identity.name');
+    expect(nameChange).toBeDefined();
+    expect(nameChange?.type).toBe('changed');
+  });
+
+  test('reports workspace file differences', async () => {
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(configPath, '{}', 'utf-8');
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await diffCommand('developer', { json: true });
+
+    const jsonOutput = output.join('\n');
+    const parsed = JSON.parse(jsonOutput) as {
+      preset: string;
+      changes: Array<{ path: string; type: string }>;
+      workspaceFiles: { toAdd: string[]; toReplace: string[] };
+    };
+
+    // developer preset has workspaceFiles: ['AGENTS.md', 'SOUL.md']
+    // Since workspace dir is empty, both should be in toAdd
+    expect(parsed.workspaceFiles.toAdd).toContain('AGENTS.md');
+    expect(parsed.workspaceFiles.toAdd).toContain('SOUL.md');
+  });
+
+  test('shows no differences when config matches preset', async () => {
+    // Create a minimal preset with no config
+    const presetsDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'empty-preset');
+    await fs.mkdir(presetsDir, { recursive: true });
+    await fs.writeFile(
+      path.join(presetsDir, 'preset.json5'),
+      JSON.stringify({
+        name: 'empty-preset',
+        description: 'Empty preset for testing',
+        version: '1.0.0',
+        config: {},
+        workspaceFiles: [],
+      }),
+      'utf-8',
+    );
+
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(configPath, '{}', 'utf-8');
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await diffCommand('empty-preset');
+
+    const combined = output.join('\n');
+    expect(combined).toContain('No differences');
+  });
+
+  test('throws error for unknown preset', async () => {
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(configPath, '{}', 'utf-8');
+    process.env.OPENCLAW_CONFIG_PATH = configPath;
+
+    await expect(diffCommand('nonexistent-preset-xyz')).rejects.toThrow(
+      "Preset 'nonexistent-preset-xyz' not found.",
+    );
+  });
+});
