@@ -10,6 +10,7 @@ import { WORKSPACE_FILES } from '../core/constants';
 import { readJson5, writeJson5 } from '../core/json5-utils';
 import { deepMerge } from '../core/merge';
 import { loadPreset } from '../core/preset-loader';
+import { isGitHubRef, parseGitHubRef, cloneToCache } from '../core/remote';
 import { filterSensitiveFields } from '../core/sensitive-filter';
 import { copyWorkspaceFiles, listWorkspaceFiles, resolveWorkspaceDir } from '../core/workspace';
 import { getBuiltinPresets } from '../presets/index';
@@ -37,19 +38,27 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
   let preset: PresetManifest;
   let presetDir: string;
 
-  const userPresetPath = path.join(paths.presetsDir, presetName);
-  try {
-    preset = await loadPreset(userPresetPath);
-    presetDir = userPresetPath;
-  } catch {
-    const builtinPreset = (await getBuiltinPresets()).find((candidate) => candidate.name === presetName);
-    if (!builtinPreset) {
-      throw new Error(
-        `Preset '${presetName}' not found. Run 'oh-my-openclaw list' to see available presets.`,
-      );
+  if (isGitHubRef(presetName)) {
+    const { owner, repo } = parseGitHubRef(presetName);
+    const cachePath = await cloneToCache(owner, repo, paths.presetsDir, { force: options.force });
+    preset = await loadPreset(cachePath);
+    presetDir = cachePath;
+    console.log(pc.green(`Remote preset '${owner}/${repo}' ready.`));
+  } else {
+    const userPresetPath = path.join(paths.presetsDir, presetName);
+    try {
+      preset = await loadPreset(userPresetPath);
+      presetDir = userPresetPath;
+    } catch {
+      const builtinPreset = (await getBuiltinPresets()).find((candidate) => candidate.name === presetName);
+      if (!builtinPreset) {
+        throw new Error(
+          `Preset '${presetName}' not found. Run 'oh-my-openclaw list' to see available presets.`,
+        );
+      }
+      preset = builtinPreset;
+      presetDir = resolveBuiltinPresetDir(presetName);
     }
-    preset = builtinPreset;
-    presetDir = resolveBuiltinPresetDir(presetName);
   }
 
   let currentConfig: Record<string, unknown> = {};
