@@ -1,0 +1,10 @@
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+
+ 129 pass
+ 0 fail
+ 252 expect() calls
+Ran 129 tests across 16 files. [3.81s]
