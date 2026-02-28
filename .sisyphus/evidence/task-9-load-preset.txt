@@ -1,0 +1,17 @@
+=== Task 9: Preset Loader Evidence ===
+Date: Sun Mar  1 02:02:56 KST 2026
+
+--- Test Suite Results ---
+bun test v1.3.9 (cf6cdbbb)
+
+ 14 pass
+ 0 fail
+ 28 expect() calls
+Ran 14 tests across 1 file. [26.00ms]
+
+--- loadPreset() Live Run ---
+my-preset 1.0.0
+
+--- Files Created ---
+-rw-r--r--@ 1 minpeter  staff  8606 Mar  1 02:02 src/core/__tests__/preset-loader.test.ts
+-rw-r--r--@ 1 minpeter  staff  2619 Mar  1 02:01 src/core/preset-loader.ts
