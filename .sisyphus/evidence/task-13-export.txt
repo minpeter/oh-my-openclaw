@@ -1,0 +1,27 @@
+
+✓ Preset 'my-setup' exported to: /tmp/omo-export-test/.openclaw/oh-my-openclaw/presets/my-setup
+  Workspace files: AGENTS.md
+  Note: Sensitive fields (auth, env, meta, etc.) were excluded.
+
+=== Test Results ===
+bun test v1.3.9 (cf6cdbbb)
+
+ 11 pass
+ 0 fail
+ 20 expect() calls
+Ran 11 tests across 1 file. [52.00ms]
+
+=== Exported preset.json5 ===
+{
+  name: 'my-setup',
+  description: 'Exported from OpenClaw on 2026-02-28',
+  version: '1.0.0',
+  config: {
+    identity: {
+      name: 'MyBot',
+    },
+  },
+  workspaceFiles: [
+    'AGENTS.md',
+  ],
+}
