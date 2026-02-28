@@ -366,7 +366,7 @@ describe('applyCommand', () => {
   test('--clean removes config and workspace files before applying', async () => {
     const env = await createTempEnv('openclaw-apply-clean-');
 
-    await writeConfig(env.configPath, { identity: { name: 'OldBot' } });
+    await writeConfig(env.configPath, { identity: { name: 'OldBot' }, untouched: { keep: true } });
     await fs.writeFile(path.join(env.workspaceDir, 'AGENTS.md'), '# Old Agents', 'utf-8');
     await fs.writeFile(path.join(env.workspaceDir, 'SOUL.md'), '# Old Soul', 'utf-8');
 
@@ -374,12 +374,18 @@ describe('applyCommand', () => {
       await applyCommand('apex', { clean: true, noBackup: true });
     });
 
+    // Config is fresh (not merged with OldBot — 'untouched' key must be gone)
     const config = await readConfig(env.configPath);
     expect((config.identity as Record<string, unknown>).name).toBe('Apex');
+    expect(config.untouched).toBeUndefined();
+
+    // Workspace files are overwritten by apex preset files
+    const agentsContent = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
+    expect(agentsContent).not.toBe('# Old Agents');
 
     const combined = logs.join('\n');
     expect(combined).toContain('Clean install');
-  });
+  })
 
   test('--clean creates backup before wiping', async () => {
     const env = await createTempEnv('openclaw-apply-clean-backup-');
