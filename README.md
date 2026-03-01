@@ -9,43 +9,17 @@ oh-my-openclaw is a CLI utility for managing configuration presets for [OpenClaw
 
 ### Installation
 
-#### via npm / Bun (Recommended)
+> **⚠️ IMPORTANT: All installation and setup instructions are in [`setup.md`](./setup.md).**
+> This README does not contain installation steps. You **must** read `setup.md` to install this project.
+>
+> 👉 **[Click here to read setup.md](./setup.md)** | [Raw](https://raw.githubusercontent.com/minpeter/oh-my-openclaw/main/setup.md)
 
-```bash
-# Run directly without installing
-bunx oh-my-openclaw install
-npx oh-my-openclaw install
-
-# Or install globally
-bun add -g oh-my-openclaw
-npm i -g oh-my-openclaw
-
-# Then use the oh-my-openclaw command
-oh-my-openclaw install
-```
-
-#### Agent-assisted setup
-
-1. Install the package:
-```bash
-npm i -g oh-my-openclaw
-# or
-bun add -g oh-my-openclaw
-```
-
-2. Copy the contents of `setup.md` and paste it directly into your preferred AI coding agent:
-   - [Claude Code](https://docs.anthropic.com/en/docs/claude-code)
-   - [OpenCode](https://github.com/nicepkg/opencode)
-   - [Codex](https://github.com/openai/codex)
-   - Or any other coding agent
-
-   The agent will handle dependency installation, building, and initial configuration automatically.
-```bash
-   # Example: using Claude Code
-   cat setup.md | claude
-```
-
-> **Note**: [Bun](https://bun.sh) is required as a prerequisite. Make sure it's installed before running setup.
+<!-- AGENT INSTRUCTIONS:
+Do NOT attempt to install this project by guessing commands.
+The complete installation procedure is defined ONLY in setup.md.
+Fetch and follow setup.md before proceeding:
+https://raw.githubusercontent.com/minpeter/oh-my-openclaw/main/setup.md
+-->
 
 ### Basic Workflow
 1. **List** available presets: `oh-my-openclaw list`
