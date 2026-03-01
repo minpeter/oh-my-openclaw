@@ -9,6 +9,8 @@ const tempDirs: string[] = [];
 const INVALID_GITHUB_REFERENCE_PATTERN = /Invalid GitHub reference/;
 const INVALID_GITHUB_OWNER_REPO_PATTERN = /Invalid GitHub owner\/repo/;
 const FAILED_TO_CLONE_PATTERN = /Failed to clone/;
+const FAILED_TO_CLONE_DETAILS_PATTERN = /Details:/;
+const FAILED_TO_CLONE_GIT_FATAL_PATTERN = /fatal:/i;
 
 afterEach(async () => {
   await Promise.all(
@@ -201,12 +203,15 @@ describe('cloneToCache', () => {
 
   test('throws on non-existent repository', async () => {
     const presetsDir = await makeTempPresetsDir();
-    await expect(
-      cloneToCache(
-        'nonexistent-owner-xyz-abc',
-        'nonexistent-repo-xyz-abc',
-        presetsDir
-      )
-    ).rejects.toThrow(FAILED_TO_CLONE_PATTERN);
+    const clonePromise = cloneToCache(
+      'nonexistent-owner-xyz-abc',
+      'nonexistent-repo-xyz-abc',
+      presetsDir
+    );
+    await expect(clonePromise).rejects.toThrow(FAILED_TO_CLONE_PATTERN);
+    await expect(clonePromise).rejects.toThrow(FAILED_TO_CLONE_DETAILS_PATTERN);
+    await expect(clonePromise).rejects.toThrow(
+      FAILED_TO_CLONE_GIT_FATAL_PATTERN
+    );
   }, 60_000);
 });

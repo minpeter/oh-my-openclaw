@@ -36,6 +36,43 @@ function isPathTraversalAttempt(input: string): boolean {
   return input === '..' || input.startsWith('../') || input.includes('/../');
 }
 
+function toNonEmptyString(value: unknown): string | null {
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    return normalized.length > 0 ? normalized : null;
+  }
+  if (value instanceof Uint8Array) {
+    const normalized = new TextDecoder().decode(value).trim();
+    return normalized.length > 0 ? normalized : null;
+  }
+  return null;
+}
+
+function getErrorMessage(error: unknown): string {
+  if (typeof error === 'object' && error !== null && 'stderr' in error) {
+    const stderrText = toNonEmptyString(error.stderr);
+    if (stderrText) {
+      return stderrText;
+    }
+  }
+  if (error instanceof Error) {
+    const messageText = toNonEmptyString(error.message);
+    if (messageText) {
+      return messageText;
+    }
+  }
+
+  const stringText = toNonEmptyString(error);
+  if (stringText) {
+    return stringText;
+  }
+  try {
+    return JSON.stringify(error);
+  } catch {
+    return String(error);
+  }
+}
+
 export function isGitHubRef(input: string): boolean {
   if (!input) {
     return false;
@@ -140,9 +177,13 @@ export async function cloneToCache(
     await fs.rm(cachePath, { recursive: true, force: true });
     await fs.rename(tmpDir, cachePath);
     return cachePath;
-  } catch {
+  } catch (error: unknown) {
+    const errorMessage = getErrorMessage(error);
     throw new Error(
-      `Failed to clone '${owner}/${repo}'. Ensure the repository exists and is public.`
+      `Failed to clone '${owner}/${repo}'. Ensure the repository exists and is public. Details: ${errorMessage}`,
+      {
+        cause: error,
+      }
     );
   } finally {
     await fs
