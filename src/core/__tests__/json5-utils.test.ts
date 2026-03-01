@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 import {
+  isFileNotFoundError,
   parseJson5,
   readJson5,
   stringifyJson5,
@@ -101,5 +102,62 @@ describe('json5-utils', () => {
     const stringified = stringifyJson5(data);
 
     expect(parseJson5(stringified)).toEqual(data);
+  });
+
+  describe('isFileNotFoundError', () => {
+    test('returns true for ENOENT error', () => {
+      const error = Object.assign(new Error('ENOENT'), { code: 'ENOENT' });
+
+      expect(isFileNotFoundError(error)).toBe(true);
+    });
+
+    test('returns true for error with ENOENT cause', () => {
+      const cause = Object.assign(new Error('not found'), { code: 'ENOENT' });
+      const error = new Error('Cannot read file', { cause });
+
+      expect(isFileNotFoundError(error)).toBe(true);
+    });
+
+    test('returns false for non-ENOENT error', () => {
+      const error = Object.assign(new Error('EACCES'), { code: 'EACCES' });
+
+      expect(isFileNotFoundError(error)).toBe(false);
+    });
+
+    test('returns false for null', () => {
+      expect(isFileNotFoundError(null)).toBe(false);
+    });
+
+    test('returns false for undefined', () => {
+      expect(isFileNotFoundError(undefined)).toBe(false);
+    });
+
+    test('returns false for non-Error object without code', () => {
+      expect(isFileNotFoundError({ message: 'something' })).toBe(false);
+    });
+
+    test('returns false for string', () => {
+      expect(isFileNotFoundError('ENOENT')).toBe(false);
+    });
+
+    test('returns false for error with non-string code', () => {
+      const error = Object.assign(new Error('bad'), { code: 42 });
+
+      expect(isFileNotFoundError(error)).toBe(false);
+    });
+
+    test('returns true for readJson5 wrapped ENOENT error', async () => {
+      const filePath = path.join(os.tmpdir(), `missing-${Date.now()}.json5`);
+
+      try {
+        await readJson5(filePath);
+      } catch (error) {
+        expect(isFileNotFoundError(error)).toBe(true);
+        return;
+      }
+
+      // Should not reach here
+      expect(true).toBe(false);
+    });
   });
 });

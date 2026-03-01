@@ -241,4 +241,81 @@ describe('exportCommand', () => {
     const stat = await fs.stat(manifestPath);
     expect(stat.isFile()).toBe(true);
   });
+
+  test('throws on invalid current config JSON5', async () => {
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(configPath, '{ invalid json5', 'utf-8');
+
+    await expect(exportCommand('invalid-config-test')).rejects.toThrow(
+      `Invalid JSON5 in ${configPath}:`
+    );
+  });
+
+  test('uses default description when none provided', async () => {
+    await exportCommand('default-desc-test');
+
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'default-desc-test'
+    );
+    const manifestPath = path.join(presetDir, 'preset.json5');
+    const content = await fs.readFile(manifestPath, 'utf-8');
+
+    // Default description includes 'Exported from OpenClaw on'
+    expect(content).toContain('Exported from OpenClaw on');
+  });
+
+  test('uses default version 1.0.0 when none provided', async () => {
+    await exportCommand('default-version-test');
+
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'default-version-test'
+    );
+    const manifestPath = path.join(presetDir, 'preset.json5');
+    const content = await fs.readFile(manifestPath, 'utf-8');
+
+    expect(content).toContain('1.0.0');
+  });
+
+  test('exported preset can be loaded back via loadPreset', async () => {
+    const configPath = path.join(tempStateDir, 'openclaw.json');
+    await fs.writeFile(
+      configPath,
+      JSON.stringify({
+        identity: { name: 'RoundTrip' },
+        tools: { allow: ['read', 'write'] },
+      }),
+      'utf-8'
+    );
+
+    await exportCommand('roundtrip-test', {
+      description: 'Round-trip test preset',
+      version: '3.0.0',
+    });
+
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'roundtrip-test'
+    );
+
+    // Dynamically import to verify round-trip
+    const { loadPreset } = await import('../../core/preset-loader');
+    const loaded = await loadPreset(presetDir);
+
+    expect(loaded.name).toBe('roundtrip-test');
+    expect(loaded.description).toBe('Round-trip test preset');
+    expect(loaded.version).toBe('3.0.0');
+    expect(loaded.config).toBeDefined();
+    // identity should be present (non-sensitive)
+    expect((loaded.config as Record<string, unknown>).identity).toEqual({
+      name: 'RoundTrip',
+    });
+  });
 });

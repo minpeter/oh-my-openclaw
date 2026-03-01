@@ -6,8 +6,12 @@ import path from 'node:path';
 import { WORKSPACE_FILES } from '../constants';
 import {
   copyWorkspaceFiles,
+  copyWorkspaceSkills,
   exportWorkspaceFiles,
+  exportWorkspaceSkills,
   listWorkspaceFiles,
+  listWorkspaceSkillFiles,
+  listWorkspaceSkills,
   resolveWorkspaceDir,
 } from '../workspace';
 
@@ -214,5 +218,197 @@ describe('exportWorkspaceFiles', () => {
 
     // presetDir should not have been created since there were no files
     await expect(access(presetDir)).rejects.toThrow();
+  });
+
+  describe('listWorkspaceSkills', () => {
+    test('lists skill directories that contain SKILL.md', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const skillsDir = path.join(tempDir, 'skills');
+      const skillADir = path.join(skillsDir, 'skill-a');
+      const skillBDir = path.join(skillsDir, 'skill-b');
+
+      await mkdir(skillADir, { recursive: true });
+      await mkdir(skillBDir, { recursive: true });
+      await writeFile(path.join(skillADir, 'SKILL.md'), '# Skill A');
+      await writeFile(path.join(skillBDir, 'SKILL.md'), '# Skill B');
+
+      const skills = await listWorkspaceSkills(tempDir);
+
+      expect(skills).toEqual(['skill-a', 'skill-b']);
+    });
+
+    test('ignores directories without SKILL.md', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const skillsDir = path.join(tempDir, 'skills');
+      const validDir = path.join(skillsDir, 'valid-skill');
+      const invalidDir = path.join(skillsDir, 'no-skill-md');
+
+      await mkdir(validDir, { recursive: true });
+      await mkdir(invalidDir, { recursive: true });
+      await writeFile(path.join(validDir, 'SKILL.md'), '# Valid');
+      await writeFile(path.join(invalidDir, 'README.md'), '# Not a skill');
+
+      const skills = await listWorkspaceSkills(tempDir);
+
+      expect(skills).toEqual(['valid-skill']);
+    });
+
+    test('ignores files in skills directory (not directories)', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const skillsDir = path.join(tempDir, 'skills');
+      const validDir = path.join(skillsDir, 'real-skill');
+
+      await mkdir(validDir, { recursive: true });
+      await writeFile(path.join(validDir, 'SKILL.md'), '# Real Skill');
+      await writeFile(path.join(skillsDir, 'stray-file.txt'), 'not a dir');
+
+      const skills = await listWorkspaceSkills(tempDir);
+
+      expect(skills).toEqual(['real-skill']);
+    });
+
+    test('returns empty array when skills directory does not exist', async () => {
+      const skills = await listWorkspaceSkills(tempDir);
+
+      expect(skills).toEqual([]);
+    });
+
+    test('returns sorted skill names', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const skillsDir = path.join(tempDir, 'skills');
+
+      for (const name of ['zebra', 'alpha', 'middle']) {
+        const dir = path.join(skillsDir, name);
+        await mkdir(dir, { recursive: true });
+        await writeFile(path.join(dir, 'SKILL.md'), `# ${name}`);
+      }
+
+      const skills = await listWorkspaceSkills(tempDir);
+
+      expect(skills).toEqual(['alpha', 'middle', 'zebra']);
+    });
+  });
+
+  describe('listWorkspaceSkillFiles', () => {
+    test('returns relative paths to SKILL.md files', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const skillsDir = path.join(tempDir, 'skills');
+      const skillDir = path.join(skillsDir, 'my-skill');
+
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(path.join(skillDir, 'SKILL.md'), '# My Skill');
+
+      const files = await listWorkspaceSkillFiles(tempDir);
+
+      expect(files).toEqual([path.join('skills', 'my-skill', 'SKILL.md')]);
+    });
+
+    test('returns empty array when no skills exist', async () => {
+      const files = await listWorkspaceSkillFiles(tempDir);
+
+      expect(files).toEqual([]);
+    });
+  });
+
+  describe('copyWorkspaceSkills', () => {
+    test('copies skill directories recursively', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const srcRoot = path.join(tempDir, 'src-root');
+      const destRoot = path.join(tempDir, 'dest-root');
+      const skillDir = path.join(srcRoot, 'skills', 'my-skill');
+
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(path.join(skillDir, 'SKILL.md'), '# My Skill');
+      await mkdir(path.join(skillDir, 'scripts'), { recursive: true });
+      await writeFile(path.join(skillDir, 'scripts', 'run.sh'), '#!/bin/bash');
+
+      await copyWorkspaceSkills(srcRoot, destRoot, ['my-skill']);
+
+      const destSkillDir = path.join(destRoot, 'skills', 'my-skill');
+      expect(await readFile(path.join(destSkillDir, 'SKILL.md'), 'utf8')).toBe(
+        '# My Skill'
+      );
+      expect(
+        await readFile(path.join(destSkillDir, 'scripts', 'run.sh'), 'utf8')
+      ).toBe('#!/bin/bash');
+    });
+
+    test('does nothing when skills array is empty', async () => {
+      const { access } = await import('node:fs/promises');
+      const srcRoot = path.join(tempDir, 'src-root');
+      const destRoot = path.join(tempDir, 'dest-root');
+
+      await copyWorkspaceSkills(srcRoot, destRoot, []);
+
+      // destRoot/skills should not exist
+      await expect(access(path.join(destRoot, 'skills'))).rejects.toThrow();
+    });
+
+    test('copies multiple skills', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const srcRoot = path.join(tempDir, 'src-root');
+      const destRoot = path.join(tempDir, 'dest-root');
+
+      for (const name of ['skill-a', 'skill-b']) {
+        const dir = path.join(srcRoot, 'skills', name);
+        await mkdir(dir, { recursive: true });
+        await writeFile(path.join(dir, 'SKILL.md'), `# ${name}`);
+      }
+
+      await copyWorkspaceSkills(srcRoot, destRoot, ['skill-a', 'skill-b']);
+
+      expect(
+        await readFile(
+          path.join(destRoot, 'skills', 'skill-a', 'SKILL.md'),
+          'utf8'
+        )
+      ).toBe('# skill-a');
+      expect(
+        await readFile(
+          path.join(destRoot, 'skills', 'skill-b', 'SKILL.md'),
+          'utf8'
+        )
+      ).toBe('# skill-b');
+    });
+  });
+
+  describe('exportWorkspaceSkills', () => {
+    test('copies existing skills into preset directory and returns their names', async () => {
+      const { mkdir } = await import('node:fs/promises');
+      const workspaceDir = path.join(tempDir, 'workspace');
+      const presetDir = path.join(tempDir, 'preset');
+      const skillDir = path.join(workspaceDir, 'skills', 'my-skill');
+
+      await mkdir(skillDir, { recursive: true });
+      await writeFile(path.join(skillDir, 'SKILL.md'), '# My Skill');
+
+      const result = await exportWorkspaceSkills(workspaceDir, presetDir);
+
+      expect(result).toEqual(['my-skill']);
+      expect(
+        await readFile(
+          path.join(presetDir, 'skills', 'my-skill', 'SKILL.md'),
+          'utf8'
+        )
+      ).toBe('# My Skill');
+    });
+
+    test('returns empty array when no skills exist', async () => {
+      const workspaceDir = path.join(tempDir, 'workspace');
+      const presetDir = path.join(tempDir, 'preset');
+
+      const result = await exportWorkspaceSkills(workspaceDir, presetDir);
+
+      expect(result).toEqual([]);
+    });
+
+    test('handles missing workspace dir gracefully', async () => {
+      const workspaceDir = path.join(tempDir, 'nonexistent-workspace');
+      const presetDir = path.join(tempDir, 'preset');
+
+      const result = await exportWorkspaceSkills(workspaceDir, presetDir);
+
+      expect(result).toEqual([]);
+    });
   });
 });

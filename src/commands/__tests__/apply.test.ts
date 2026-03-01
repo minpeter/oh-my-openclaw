@@ -908,4 +908,112 @@ describe('skill deployment', () => {
       ?.list as Record<string, unknown>[];
     expect(agentsList?.[0]?.identity).toEqual({ name: 'NoSkillUpdated' });
   });
+
+  describe('apply edge cases', () => {
+    test('--no-backup skips backup creation', async () => {
+      const env = await createTempEnv('openclaw-apply-nobackup-');
+
+      await writeConfig(env.configPath, { identity: { name: 'NoBackupBot' } });
+
+      await writeUserPreset(env.presetsDir, 'nobackup-preset', {
+        name: 'nobackup-preset',
+        description: 'No backup preset',
+        version: '1.0.0',
+        config: {
+          identity: { name: 'Updated' },
+        },
+      });
+
+      await applyCommand('nobackup-preset', { noBackup: true });
+
+      const backupEntries = await fs.readdir(env.backupsDir);
+      const configBackups = backupEntries.filter((entry) =>
+        entry.endsWith('.bak')
+      );
+
+      expect(configBackups.length).toBe(0);
+
+      // Config should still be updated
+      const config = await readConfig(env.configPath);
+      const agentsList = (config.agents as Record<string, unknown>)
+        ?.list as Record<string, unknown>[];
+      expect((agentsList?.[0]?.identity as Record<string, unknown>)?.name).toBe(
+        'Updated'
+      );
+    });
+
+    test('apply to non-existent config creates new file from preset', async () => {
+      const env = await createTempEnv('openclaw-apply-newconfig-');
+
+      // Do NOT create config file — it should be created by apply
+      expect(await fileExists(env.configPath)).toBe(false);
+
+      await writeUserPreset(env.presetsDir, 'newconfig-preset', {
+        name: 'newconfig-preset',
+        description: 'New config preset',
+        version: '1.0.0',
+        config: {
+          identity: { name: 'FreshBot' },
+          tools: { allow: ['read'] },
+        },
+      });
+
+      const logs = await captureLogs(async () => {
+        await applyCommand('newconfig-preset', { noBackup: true });
+      });
+
+      expect(await fileExists(env.configPath)).toBe(true);
+
+      const config = await readConfig(env.configPath);
+      const agentsList = (config.agents as Record<string, unknown>)
+        ?.list as Record<string, unknown>[];
+      expect((agentsList?.[0]?.identity as Record<string, unknown>)?.name).toBe(
+        'FreshBot'
+      );
+      expect(config.tools).toEqual({ allow: ['read'] });
+
+      const combined = logs.join('\n');
+      expect(combined).toContain('config file not found');
+    });
+
+    test('apply preset not found throws descriptive error', async () => {
+      const env = await createTempEnv('openclaw-apply-notfound-');
+
+      await writeConfig(env.configPath, { identity: { name: 'Bot' } });
+
+      await expect(applyCommand('nonexistent-preset-xyz-abc')).rejects.toThrow(
+        "Preset 'nonexistent-preset-xyz-abc' not found."
+      );
+    });
+
+    test('--clean + --no-backup removes config without backup', async () => {
+      const env = await createTempEnv('openclaw-apply-clean-nobackup-');
+
+      await writeConfig(env.configPath, {
+        identity: { name: 'CleanNoBackup' },
+      });
+
+      await writeUserPreset(env.presetsDir, 'clean-nobackup-preset', {
+        name: 'clean-nobackup-preset',
+        description: 'Clean no backup',
+        version: '1.0.0',
+        config: {
+          identity: { name: 'Fresh' },
+        },
+      });
+
+      await applyCommand('clean-nobackup-preset', {
+        clean: true,
+        noBackup: true,
+      });
+
+      // No backups should exist
+      const backupEntries = await fs.readdir(env.backupsDir);
+      expect(backupEntries.length).toBe(0);
+
+      // Config should be freshly created from preset (no merge)
+      const config = await readConfig(env.configPath);
+      expect(config.untouched).toBeUndefined();
+    });
+  });
 });
