@@ -4,30 +4,95 @@ Set up Openclaw so it is immediately ready to use.
 
 ## Step 1 — Gather all required information upfront
 
-Before doing anything else, use the `AskUserQuestion` tool in a **single call** with all questions at once:
+Before doing anything else, use the `AskUserQuestion` tool to collect all configuration interactively. The user should never have to type free-form prompts for selection-based questions — always present choices as selectable options.
 
-- **Messenger** (multi-select): Which messengers do you want to connect?
-  - Options: Telegram / Discord / WhatsApp / None
-- **Bot tokens**: Paste the bot token(s) for the selected messenger(s).
-  If you don't have one yet, type "none" and the setup will guide you.
-- **AI provider**: Which AI provider will you use?
-  - Options: Anthropic (Claude) / OpenAI / Google Gemini / Free (OpenRouter, Ollama, etc.)
-- **API key**: Paste your API key, or type `env` if it is already set as an environment variable.
+### 1-A. Messenger selection
 
-Do not proceed to Step 2 until the user has answered all four questions.
+Use `AskUserQuestion` (multi-select):
+
+> **Which messengers do you want to connect?**
+> - Telegram
+> - Discord
+> - WhatsApp
+> - None (skip for now)
+
+### 1-B. Bot token status
+
+For **each** messenger selected above, use `AskUserQuestion` (single-select):
+
+> **Do you already have a bot token for {messenger}?**
+> - Yes, I have a token ready
+> - No, guide me through creating one
+
+If the user selects "Yes" → ask them to paste the token (this is the only free-text input needed).
+If the user selects "No" → proceed to the guided token creation below before asking for the next messenger.
+
+### 1-C. AI provider selection
+
+Use `AskUserQuestion` (single-select):
+
+> **Which AI provider will you use?**
+> - Anthropic (Claude)
+> - OpenAI
+> - Google Gemini
+> - Free (OpenRouter, Ollama, etc.)
+
+### 1-D. API key status
+
+Use `AskUserQuestion` (single-select):
+
+> **How is your API key configured?**
+> - I'll paste it now
+> - It's already set as an environment variable (`env`)
+
+If the user selects "I'll paste it now" → ask them to paste the API key (free-text input).
+If the user selects `env` → no further input needed.
+
+Do not proceed to Step 2 until all four sections (1-A through 1-D) are answered.
+
+---
 
 ### If the user has no Discord token
-Guide them step by step and confirm each step before proceeding:
+Guide them step by step and use `AskUserQuestion` (single-select) to confirm each step:
+
 1. Open discord.com/developers/applications → click **New Application** → enter a name → Create
+
+   > **Have you completed this step?**
+   > - Yes, done
+   > - I need help
+
 2. Left menu → **Bot** → click **Reset Token** → copy the token
+
+   > **Have you completed this step?**
+   > - Yes, I copied the token
+   > - I need help
+
 3. On the same Bot page, scroll down → enable **Message Content Intent**
+
+   > **Have you completed this step?**
+   > - Yes, enabled
+   > - I need help
+
 4. Left menu → **OAuth2 → URL Generator** → check `bot` scope → check `Send Messages` + `Read Message History` permissions → open the generated URL to invite the bot to your server
-Confirm "Have you completed this step?" after each step.
+
+   > **Have you completed this step?**
+   > - Yes, bot is in my server
+   > - I need help
+
+After all steps, ask the user to paste the token (free-text input).
 
 ### If the user has no Telegram token
 Guide them:
 1. Open Telegram → message @BotFather → send `/newbot`
 2. Follow the prompts → copy the token (format: `123456:ABC-DEF...`)
+
+Use `AskUserQuestion` to confirm:
+
+> **Have you created the bot and copied the token?**
+> - Yes, I have the token
+> - I need help
+
+Then ask the user to paste the token (free-text input).
 
 ---
 
@@ -36,22 +101,23 @@ Guide them:
 `openclaw` is published to npm — no git clone or build required:
 
 ```bash
-npm install -g openclaw
+npm install -g oh-my-openclaw
 openclaw --help
 ```
 
 ---
 
-## Step 3 — Apply the apex preset
+## Step 3 — Apply the oh-my-openclaw preset
 
 ```bash
-./dist/apex install
+openclaw presets apply oh-my-openclaw
 ```
 
 Notes:
-- The only built-in preset is `apex`. The `install` subcommand is a shortcut for `apply apex`.
+- `oh-my-openclaw` is the default community preset installed via npm. The `apply` subcommand reads and applies its configuration.
 - Legacy config keys (e.g., top-level `identity`) are automatically migrated during apply — no manual `doctor --fix` needed afterward.
 - If you see `Legacy key migration: identity → agents.list[].identity` in the output, that is normal and expected.
+
 ---
 
 ## Step 4 — Register messenger channel(s)
@@ -90,14 +156,14 @@ openclaw reads API keys from standard environment variables automatically — no
 If you run OpenClaw via a LaunchAgent/service, shell env vars may not be inherited. Persist the key once in the agent auth store:
 
 ```bash
-# Example (apex default provider)
+# Example (oh-my-openclaw default provider)
 openclaw models auth paste-token --provider anthropic
 openclaw gateway restart
 ```
 
 Use `--provider openai` or `--provider openrouter` when those are your primary providers.
 
-| Provider | Env var read automatically | Default model set by apex preset |
+| Provider | Env var read automatically | Default model set by oh-my-openclaw preset |
 |----------|---------------------------|----------------------------------|
 | Anthropic | `ANTHROPIC_API_KEY` | `anthropic/claude-opus-4-6` ✓ |
 | OpenAI | `OPENAI_API_KEY` | change with config set below |
@@ -189,7 +255,7 @@ If any command fails:
 |-------|-----|
 | `Unknown channel: telegram` | `openclaw plugins enable telegram` first |
 | `Unknown channel: discord` | `openclaw plugins enable discord` first |
-| `Preset not found` | Use `./dist/apex install`, not `apply developer` |
+| `Preset not found` | `openclaw presets apply oh-my-openclaw` (ensure `oh-my-openclaw` is installed via npm) |
 | `Invalid config` / migration warnings | `openclaw doctor --fix` |
 | `gateway.mode is unset` | `openclaw config set gateway.mode local` |
 | `gateway run` fails (port in use) | `openclaw gateway run --force` |
@@ -207,8 +273,8 @@ If any command fails:
 If the gateway is completely broken or you want to start fresh:
 
 ```bash
-# 1. Apply apex preset (auto-migrates legacy keys)
-./dist/apex install
+# 1. Apply oh-my-openclaw preset (auto-migrates legacy keys)
+openclaw presets apply oh-my-openclaw
 
 # 2. Fix any remaining config issues
 openclaw doctor --fix --yes
