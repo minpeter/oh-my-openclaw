@@ -1,5 +1,78 @@
+bun test v1.3.9 (cf6cdbbb)
+
+src/commands/__tests__/apply.test.ts:
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-merge-Vxriig/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-433Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'merge-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-ws-copy-VXaYI7/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-436Z.bak
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'workspace-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-backup-UlmhEs/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-439Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'backup-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-sensitive-K47Z7A/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-443Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'sensitive-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-md-only-bQf9wg/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-448Z.bak
+OK Workspace files copied: AGENTS.md
+
+OK Preset 'md-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-config-only-2mEjsr/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-450Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'config-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-clean-backup-r0hpS3/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-25-40-454Z.bak
+Clean install: existing config and workspace files removed.
+Warning: config file not found. Creating new config from preset.
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+Skipped skill 'prompt-guard' (already exists. Use --force to overwrite).
+OK Skills installed: prompt-guard
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+Skipped skill 'prompt-guard' (already exists. Use --force to overwrite).
+OK Skills installed: prompt-guard
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
 
  23 pass
  0 fail
- 52 expect() calls
-Ran 23 tests across 1 file. [5.02s]
+ 55 expect() calls
+Ran 23 tests across 1 file. [5.07s]
