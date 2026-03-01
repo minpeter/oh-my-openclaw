@@ -1,0 +1,7 @@
+bun test v1.3.9 (cf6cdbbb)
+OK Skill 'test-skill' installed.
+OK Skill 'my-skill' installed.
+OK Skill 'new-skill' installed.
+OK Skill 'update-skill' installed.
+OK Skill 'skill-a' installed.
+OK Skill 'skill-b' installed.

@@ -6,6 +6,7 @@ import readline from 'node:readline';
 export interface CopySkillsOptions {
   force?: boolean;
   dryRun?: boolean;
+  targetBaseDir?: string;
 }
 
 function isYes(input: string): boolean {
@@ -54,7 +55,8 @@ export async function copySkills(
   }
 
   const sourceBaseDir = path.join(presetDir, 'skills');
-  const targetBaseDir = path.join(os.homedir(), '.agents', 'skills');
+  const homeDir = process.env.HOME ?? os.homedir();
+  const targetBaseDir = options?.targetBaseDir ?? path.join(homeDir, '.agents', 'skills');
   const isDryRun = options?.dryRun === true;
   const forceOverwrite = options?.force === true;
   let targetBaseEnsured = false;
