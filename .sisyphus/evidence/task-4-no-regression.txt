@@ -1,0 +1,71 @@
+bun test v1.3.9 (cf6cdbbb)
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-merge-67JaHG/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-762Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'merge-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-ws-copy-lZzG7g/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-766Z.bak
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'workspace-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-backup-U50A7J/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-769Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'backup-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-sensitive-ZPPO0a/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-772Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'sensitive-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-md-only-7Q6Ogs/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-779Z.bak
+OK Workspace files copied: AGENTS.md
+
+OK Preset 'md-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-config-only-Q2WhDZ/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-781Z.bak
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+
+OK Preset 'config-only-preset' applied.
+Run 'openclaw gateway restart' to activate changes.
+Backup created: /var/folders/s0/8jq7x8gx4ms5bx13lgxbf9300000gn/T/openclaw-apply-clean-backup-LgAkx0/.openclaw/oh-my-openclaw/backups/openclaw.json.2026-03-01T02-07-38-786Z.bak
+Clean install: existing config and workspace files removed.
+Warning: config file not found. Creating new config from preset.
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+Skipped skill 'prompt-guard' (already exists. Use --force to overwrite).
+OK Skills installed: prompt-guard
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+Skipped skill 'prompt-guard' (already exists. Use --force to overwrite).
+OK Skills installed: prompt-guard
+
+OK Preset 'apex' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.
+Remote preset 'minpeter/demo-researcher' ready.
+Warning: JSON5 comments in your config will be lost (known MVP limitation).
+OK Workspace files copied: AGENTS.md, SOUL.md
+
+OK Preset 'researcher' applied.
+Run 'openclaw gateway restart' to activate changes.

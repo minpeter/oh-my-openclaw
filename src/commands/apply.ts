@@ -12,6 +12,7 @@ import { deepMerge } from '../core/merge';
 import { loadPreset } from '../core/preset-loader';
 import { isGitHubRef, parseGitHubRef, cloneToCache } from '../core/remote';
 import { filterSensitiveFields } from '../core/sensitive-filter';
+import { copySkills } from '../core/skills';
 import { copyWorkspaceFiles, listWorkspaceFiles, resolveWorkspaceDir } from '../core/workspace';
 import { getBuiltinPresets } from '../presets/index';
 import type { PresetManifest } from '../core/types';
@@ -121,6 +122,9 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
     if (preset.workspaceFiles?.length) {
       console.log(`Workspace files: ${preset.workspaceFiles.join(', ')}`);
     }
+    if (preset.skills?.length) {
+      console.log(`Skills to install: ${preset.skills.join(', ')}`);
+    }
     console.log(pc.dim('\nRun without --dry-run to apply.'));
     return;
   }
@@ -157,6 +161,11 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
   if (preset.workspaceFiles?.length) {
     await copyWorkspaceFiles(presetDir, workspaceDir, preset.workspaceFiles);
     console.log(pc.green(`OK Workspace files copied: ${preset.workspaceFiles.join(', ')}`));
+  }
+
+  if (preset.skills?.length) {
+    await copySkills(presetDir, preset.skills, { force: options.force });
+    console.log(pc.green(`OK Skills installed: ${preset.skills.join(', ')}`));
   }
 
   console.log(pc.green(`\nOK Preset '${preset.name}' applied.`));

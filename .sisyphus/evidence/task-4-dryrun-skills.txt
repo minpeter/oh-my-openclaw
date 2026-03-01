@@ -1,0 +1,8 @@
+DRY RUN - no files will be modified
+
+Preset: apex (All-in-one power assistant preset with secure prompt-guard defaults)
+Config changes: 4 top-level keys
+Workspace files: AGENTS.md, SOUL.md, TOOLS.md, USER.md, IDENTITY.md
+Skills to install: prompt-guard
+
+Run without --dry-run to apply.
