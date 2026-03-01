@@ -1,8 +1,7 @@
+import { afterEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-
-import { afterEach, describe, expect, test } from 'bun:test';
 
 import { cloneToCache, isGitHubRef, parseGitHubRef } from '../remote';
 
@@ -12,7 +11,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map(async (dir) => {
       await fs.rm(dir, { recursive: true, force: true });
-    }),
+    })
   );
 });
 
@@ -30,11 +29,15 @@ describe('isGitHubRef', () => {
   });
 
   test('returns true for full GitHub URL', () => {
-    expect(isGitHubRef('https://github.com/minpeter/demo-researcher')).toBe(true);
+    expect(isGitHubRef('https://github.com/minpeter/demo-researcher')).toBe(
+      true
+    );
   });
 
   test('returns true for URL with .git suffix', () => {
-    expect(isGitHubRef('https://github.com/minpeter/demo-researcher.git')).toBe(true);
+    expect(isGitHubRef('https://github.com/minpeter/demo-researcher.git')).toBe(
+      true
+    );
   });
 
   test('returns false for local preset name', () => {
@@ -63,21 +66,27 @@ describe('parseGitHubRef', () => {
   });
 
   test('parses full GitHub URL', () => {
-    expect(parseGitHubRef('https://github.com/minpeter/demo-researcher')).toEqual({
+    expect(
+      parseGitHubRef('https://github.com/minpeter/demo-researcher')
+    ).toEqual({
       owner: 'minpeter',
       repo: 'demo-researcher',
     });
   });
 
   test('strips .git suffix from repo', () => {
-    expect(parseGitHubRef('https://github.com/minpeter/demo-researcher.git')).toEqual({
+    expect(
+      parseGitHubRef('https://github.com/minpeter/demo-researcher.git')
+    ).toEqual({
       owner: 'minpeter',
       repo: 'demo-researcher',
     });
   });
 
   test('strips trailing slash', () => {
-    expect(parseGitHubRef('https://github.com/minpeter/demo-researcher/')).toEqual({
+    expect(
+      parseGitHubRef('https://github.com/minpeter/demo-researcher/')
+    ).toEqual({
       owner: 'minpeter',
       repo: 'demo-researcher',
     });
@@ -103,7 +112,11 @@ describe('parseGitHubRef', () => {
 describe('cloneToCache', () => {
   test('clones real repo to cache directory', async () => {
     const presetsDir = await makeTempPresetsDir();
-    const cachePath = await cloneToCache('minpeter', 'demo-researcher', presetsDir);
+    const cachePath = await cloneToCache(
+      'minpeter',
+      'demo-researcher',
+      presetsDir
+    );
 
     expect(cachePath).toBe(path.join(presetsDir, 'minpeter--demo-researcher'));
 
@@ -116,7 +129,11 @@ describe('cloneToCache', () => {
     const presetsDir = await makeTempPresetsDir();
 
     // First call - clones
-    const firstPath = await cloneToCache('minpeter', 'demo-researcher', presetsDir);
+    const firstPath = await cloneToCache(
+      'minpeter',
+      'demo-researcher',
+      presetsDir
+    );
 
     // Second call - should reuse cache
     const logs: string[] = [];
@@ -125,7 +142,11 @@ describe('cloneToCache', () => {
       logs.push(args.map(String).join(' '));
     };
     try {
-      const secondPath = await cloneToCache('minpeter', 'demo-researcher', presetsDir);
+      const secondPath = await cloneToCache(
+        'minpeter',
+        'demo-researcher',
+        presetsDir
+      );
       expect(secondPath).toBe(firstPath);
       expect(logs.some((l) => l.includes('cached'))).toBe(true);
     } finally {
@@ -146,7 +167,9 @@ describe('cloneToCache', () => {
       logs.push(args.map(String).join(' '));
     };
     try {
-      await cloneToCache('minpeter', 'demo-researcher', presetsDir, { force: true });
+      await cloneToCache('minpeter', 'demo-researcher', presetsDir, {
+        force: true,
+      });
       expect(logs.some((l) => l.includes('cached'))).toBe(false); // no "cached" message
     } finally {
       console.log = originalLog;
@@ -160,7 +183,11 @@ describe('cloneToCache', () => {
   test('throws on non-existent repository', async () => {
     const presetsDir = await makeTempPresetsDir();
     await expect(
-      cloneToCache('nonexistent-owner-xyz-abc', 'nonexistent-repo-xyz-abc', presetsDir),
+      cloneToCache(
+        'nonexistent-owner-xyz-abc',
+        'nonexistent-repo-xyz-abc',
+        presetsDir
+      )
     ).rejects.toThrow(/Failed to clone/);
   }, 60_000);
 });

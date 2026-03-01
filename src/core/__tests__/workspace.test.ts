@@ -1,20 +1,22 @@
-import { mkdtemp, rm, writeFile, readFile } from 'node:fs/promises';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
 import { WORKSPACE_FILES } from '../constants';
 import {
-  resolveWorkspaceDir,
-  listWorkspaceFiles,
   copyWorkspaceFiles,
   exportWorkspaceFiles,
+  listWorkspaceFiles,
+  resolveWorkspaceDir,
 } from '../workspace';
 
 let tempDir: string;
 
 beforeEach(async () => {
-  tempDir = await mkdtemp(path.join(tmpdir(), 'oh-my-openclaw-workspace-test-'));
+  tempDir = await mkdtemp(
+    path.join(tmpdir(), 'oh-my-openclaw-workspace-test-')
+  );
 });
 
 afterEach(async () => {
@@ -103,7 +105,7 @@ describe('copyWorkspaceFiles', () => {
   test('copies files byte-exact from src to dest', async () => {
     const srcDir = path.join(tempDir, 'src');
     const destDir = path.join(tempDir, 'dest');
-    await mkdtemp(srcDir + '-');
+    await mkdtemp(`${srcDir}-`);
     // Use mkdtemp pattern but let copyWorkspaceFiles create destDir
 
     // Create src directory and file manually
@@ -114,7 +116,10 @@ describe('copyWorkspaceFiles', () => {
 
     await copyWorkspaceFiles(srcDir, destDir, ['AGENTS.md']);
 
-    const copiedContent = await readFile(path.join(destDir, 'AGENTS.md'), 'utf8');
+    const copiedContent = await readFile(
+      path.join(destDir, 'AGENTS.md'),
+      'utf8'
+    );
     expect(copiedContent).toBe(content);
   });
 
@@ -142,11 +147,19 @@ describe('copyWorkspaceFiles', () => {
     await writeFile(path.join(srcDir, 'SOUL.md'), 'soul');
     await writeFile(path.join(srcDir, 'IDENTITY.md'), 'identity');
 
-    await copyWorkspaceFiles(srcDir, destDir, ['AGENTS.md', 'SOUL.md', 'IDENTITY.md']);
+    await copyWorkspaceFiles(srcDir, destDir, [
+      'AGENTS.md',
+      'SOUL.md',
+      'IDENTITY.md',
+    ]);
 
-    expect(await readFile(path.join(destDir, 'AGENTS.md'), 'utf8')).toBe('agents');
+    expect(await readFile(path.join(destDir, 'AGENTS.md'), 'utf8')).toBe(
+      'agents'
+    );
     expect(await readFile(path.join(destDir, 'SOUL.md'), 'utf8')).toBe('soul');
-    expect(await readFile(path.join(destDir, 'IDENTITY.md'), 'utf8')).toBe('identity');
+    expect(await readFile(path.join(destDir, 'IDENTITY.md'), 'utf8')).toBe(
+      'identity'
+    );
   });
 });
 
@@ -163,8 +176,12 @@ describe('exportWorkspaceFiles', () => {
     const result = await exportWorkspaceFiles(workspaceDir, presetDir);
 
     expect(result).toEqual(['AGENTS.md', 'SOUL.md']);
-    expect(await readFile(path.join(presetDir, 'AGENTS.md'), 'utf8')).toBe('agents content');
-    expect(await readFile(path.join(presetDir, 'SOUL.md'), 'utf8')).toBe('soul content');
+    expect(await readFile(path.join(presetDir, 'AGENTS.md'), 'utf8')).toBe(
+      'agents content'
+    );
+    expect(await readFile(path.join(presetDir, 'SOUL.md'), 'utf8')).toBe(
+      'soul content'
+    );
   });
 
   test('returns empty array when no workspace files exist', async () => {

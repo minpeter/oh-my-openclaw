@@ -4,7 +4,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 
 export function deepMerge(
   base: Record<string, unknown>,
-  override: Record<string, unknown>,
+  override: Record<string, unknown>
 ): Record<string, unknown> {
   const result: Record<string, unknown> = { ...base };
 

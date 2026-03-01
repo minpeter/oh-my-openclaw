@@ -18,7 +18,10 @@ function toOutputPreset(preset: PresetManifest): PresetManifest {
 
 export async function listCommand(options: ListOptions = {}): Promise<void> {
   const paths = await resolveOpenClawPaths();
-  const presets = await listPresets(paths.presetsDir, await getBuiltinPresets());
+  const presets = await listPresets(
+    paths.presetsDir,
+    await getBuiltinPresets()
+  );
 
   if (options.json) {
     console.log(JSON.stringify(presets.map(toOutputPreset), null, 2));
@@ -34,7 +37,9 @@ export async function listCommand(options: ListOptions = {}): Promise<void> {
 
   for (const preset of presets.map(toOutputPreset)) {
     const source = preset.builtin ? pc.dim('[builtin]') : pc.green('[user]');
-    const tags = preset.tags?.length ? pc.dim(` (${preset.tags.join(', ')})`) : '';
+    const tags = preset.tags?.length
+      ? pc.dim(` (${preset.tags.join(', ')})`)
+      : '';
     console.log(`  ${pc.bold(preset.name)} ${source}`);
     console.log(`    ${preset.description}${tags}`);
     console.log(`    ${pc.dim(`v${preset.version}`)}`);

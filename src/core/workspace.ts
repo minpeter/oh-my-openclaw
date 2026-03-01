@@ -1,11 +1,11 @@
-import path from 'node:path';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 import { WORKSPACE_FILES } from './constants';
 
 // Reads agents.defaults.workspace from parsed config, falls back to {stateDir}/workspace
 export function resolveWorkspaceDir(
   config: Record<string, unknown>,
-  stateDir: string,
+  stateDir: string
 ): string {
   const agents = config.agents as Record<string, unknown> | undefined;
   const defaults = agents?.defaults as Record<string, unknown> | undefined;
@@ -14,7 +14,9 @@ export function resolveWorkspaceDir(
 }
 
 // Returns list of existing MD files from WORKSPACE_FILES constant
-export async function listWorkspaceFiles(workspaceDir: string): Promise<string[]> {
+export async function listWorkspaceFiles(
+  workspaceDir: string
+): Promise<string[]> {
   const existing: string[] = [];
   for (const filename of WORKSPACE_FILES) {
     const filePath = path.join(workspaceDir, filename);
@@ -32,7 +34,7 @@ export async function listWorkspaceFiles(workspaceDir: string): Promise<string[]
 export async function copyWorkspaceFiles(
   srcDir: string,
   destDir: string,
-  files: string[],
+  files: string[]
 ): Promise<void> {
   await fs.mkdir(destDir, { recursive: true });
   for (const filename of files) {
@@ -45,7 +47,7 @@ export async function copyWorkspaceFiles(
 // Copies current workspace MD files into preset directory, returns list of copied files
 export async function exportWorkspaceFiles(
   workspaceDir: string,
-  presetDir: string,
+  presetDir: string
 ): Promise<string[]> {
   const existingFiles = await listWorkspaceFiles(workspaceDir);
   if (existingFiles.length > 0) {

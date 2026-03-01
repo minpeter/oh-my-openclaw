@@ -1,24 +1,24 @@
 export interface PresetManifest {
-  name: string;
-  description: string;
-  version: string;
   author?: string;
-  tags?: string[];
   builtin?: boolean;
   config?: Record<string, unknown>;
+  description: string;
+  name: string;
+  tags?: string[];
+  version: string;
   workspaceFiles?: string[];
 }
 
 export interface ResolvedPaths {
+  backupsDir: string;
   configPath: string;
+  presetsDir: string;
   stateDir: string;
   workspaceDir: string;
-  presetsDir: string;
-  backupsDir: string;
 }
 
 export interface ConfigSnapshot {
-  raw: string;
   parsed: Record<string, unknown>;
   path: string;
+  raw: string;
 }

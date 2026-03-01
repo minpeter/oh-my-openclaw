@@ -1,8 +1,7 @@
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
 import { exportCommand } from '../export';
 
@@ -17,7 +16,9 @@ describe('exportCommand', () => {
       output.push(args.map(String).join(' '));
     };
 
-    tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openclaw-export-test-'));
+    tempStateDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'openclaw-export-test-')
+    );
     process.env.OPENCLAW_STATE_DIR = tempStateDir;
     delete process.env.OPENCLAW_CONFIG_PATH;
   });
@@ -36,7 +37,12 @@ describe('exportCommand', () => {
   test('creates preset directory with preset.json5', async () => {
     await exportCommand('my-preset');
 
-    const presetDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'my-preset');
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'my-preset'
+    );
     const manifestPath = path.join(presetDir, 'preset.json5');
 
     const stat = await fs.stat(manifestPath);
@@ -44,9 +50,17 @@ describe('exportCommand', () => {
   });
 
   test('preset.json5 contains name, description, version fields', async () => {
-    await exportCommand('fields-test', { description: 'My custom desc', version: '2.0.0' });
+    await exportCommand('fields-test', {
+      description: 'My custom desc',
+      version: '2.0.0',
+    });
 
-    const presetDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'fields-test');
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'fields-test'
+    );
     const manifestPath = path.join(presetDir, 'preset.json5');
     const content = await fs.readFile(manifestPath, 'utf-8');
 
@@ -66,12 +80,17 @@ describe('exportCommand', () => {
         env: { SECRET: 'hidden' },
         meta: { internal: 'data' },
       }),
-      'utf-8',
+      'utf-8'
     );
 
     await exportCommand('sensitive-test');
 
-    const presetDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'sensitive-test');
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'sensitive-test'
+    );
     const manifestPath = path.join(presetDir, 'preset.json5');
     const manifestContent = await fs.readFile(manifestPath, 'utf-8');
 
@@ -88,7 +107,7 @@ describe('exportCommand', () => {
     await exportCommand('duplicate-preset');
 
     await expect(exportCommand('duplicate-preset')).rejects.toThrow(
-      "Preset 'duplicate-preset' already exists. Use --force to overwrite.",
+      "Preset 'duplicate-preset' already exists. Use --force to overwrite."
     );
   });
 
@@ -98,7 +117,12 @@ describe('exportCommand', () => {
     // Should not throw with --force
     await exportCommand('force-test', { force: true });
 
-    const presetDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'force-test');
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'force-test'
+    );
     const manifestPath = path.join(presetDir, 'preset.json5');
     const stat = await fs.stat(manifestPath);
     expect(stat.isFile()).toBe(true);
@@ -108,12 +132,25 @@ describe('exportCommand', () => {
     // Create workspace directory with MD files
     const workspaceDir = path.join(tempStateDir, 'workspace');
     await fs.mkdir(workspaceDir, { recursive: true });
-    await fs.writeFile(path.join(workspaceDir, 'AGENTS.md'), '# My Agent', 'utf-8');
-    await fs.writeFile(path.join(workspaceDir, 'SOUL.md'), '# My Soul', 'utf-8');
+    await fs.writeFile(
+      path.join(workspaceDir, 'AGENTS.md'),
+      '# My Agent',
+      'utf-8'
+    );
+    await fs.writeFile(
+      path.join(workspaceDir, 'SOUL.md'),
+      '# My Soul',
+      'utf-8'
+    );
 
     await exportCommand('workspace-test');
 
-    const presetDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'workspace-test');
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'workspace-test'
+    );
 
     const agentsFile = path.join(presetDir, 'AGENTS.md');
     const agentsStat = await fs.stat(agentsFile);
@@ -130,7 +167,11 @@ describe('exportCommand', () => {
   test('workspaceFiles list is saved in manifest', async () => {
     const workspaceDir = path.join(tempStateDir, 'workspace');
     await fs.mkdir(workspaceDir, { recursive: true });
-    await fs.writeFile(path.join(workspaceDir, 'AGENTS.md'), '# Agent', 'utf-8');
+    await fs.writeFile(
+      path.join(workspaceDir, 'AGENTS.md'),
+      '# Agent',
+      'utf-8'
+    );
 
     await exportCommand('manifest-files-test');
 
@@ -138,7 +179,7 @@ describe('exportCommand', () => {
       tempStateDir,
       'oh-my-openclaw',
       'presets',
-      'manifest-files-test',
+      'manifest-files-test'
     );
     const manifestPath = path.join(presetDir, 'preset.json5');
     const content = await fs.readFile(manifestPath, 'utf-8');
@@ -157,7 +198,11 @@ describe('exportCommand', () => {
   test('prints workspace files in summary when files are copied', async () => {
     const workspaceDir = path.join(tempStateDir, 'workspace');
     await fs.mkdir(workspaceDir, { recursive: true });
-    await fs.writeFile(path.join(workspaceDir, 'AGENTS.md'), '# Agent', 'utf-8');
+    await fs.writeFile(
+      path.join(workspaceDir, 'AGENTS.md'),
+      '# Agent',
+      'utf-8'
+    );
 
     await exportCommand('summary-with-files');
 
@@ -170,7 +215,7 @@ describe('exportCommand', () => {
     await fs.writeFile(
       configPath,
       JSON.stringify({ identity: { name: 'Bot' }, env: { KEY: 'value' } }),
-      'utf-8',
+      'utf-8'
     );
 
     await exportCommand('sensitive-summary-test');
@@ -186,7 +231,12 @@ describe('exportCommand', () => {
     const combined = output.join('\n');
     expect(combined).toContain('No OpenClaw config found');
 
-    const presetDir = path.join(tempStateDir, 'oh-my-openclaw', 'presets', 'no-config-test');
+    const presetDir = path.join(
+      tempStateDir,
+      'oh-my-openclaw',
+      'presets',
+      'no-config-test'
+    );
     const manifestPath = path.join(presetDir, 'preset.json5');
     const stat = await fs.stat(manifestPath);
     expect(stat.isFile()).toBe(true);

@@ -21,20 +21,25 @@ export async function readJson5(filePath: string): Promise<ConfigSnapshot> {
     parsed = JSON5.parse(trimmed);
   } catch (err) {
     throw new Error(
-      `Invalid JSON5 in ${filePath}: ${err instanceof Error ? err.message : String(err)}`,
+      `Invalid JSON5 in ${filePath}: ${err instanceof Error ? err.message : String(err)}`
     );
   }
 
   return { raw, parsed, path: filePath };
 }
 
-export async function writeJson5(filePath: string, data: Record<string, unknown>): Promise<void> {
+export async function writeJson5(
+  filePath: string,
+  data: Record<string, unknown>
+): Promise<void> {
   const content = JSON5.stringify(data, null, 2);
   await fs.writeFile(filePath, content, 'utf-8');
 }
 
 export function parseJson5(content: string): Record<string, unknown> {
-  if (content.trim() === '') return {};
+  if (content.trim() === '') {
+    return {};
+  }
   return JSON5.parse(content);
 }
 

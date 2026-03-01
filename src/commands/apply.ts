@@ -8,19 +8,24 @@ import { createBackup, createWorkspaceBackup } from '../core/backup';
 import { resolveOpenClawPaths } from '../core/config-path';
 import { WORKSPACE_FILES } from '../core/constants';
 import { readJson5, writeJson5 } from '../core/json5-utils';
+import { migrateLegacyKeys } from '../core/legacy-migration';
 import { deepMerge } from '../core/merge';
 import { loadPreset } from '../core/preset-loader';
-import { isGitHubRef, parseGitHubRef, cloneToCache } from '../core/remote';
+import { cloneToCache, isGitHubRef, parseGitHubRef } from '../core/remote';
 import { filterSensitiveFields } from '../core/sensitive-filter';
-import { copyWorkspaceFiles, listWorkspaceFiles, resolveWorkspaceDir } from '../core/workspace';
-import { getBuiltinPresets } from '../presets/index';
 import type { PresetManifest } from '../core/types';
+import {
+  copyWorkspaceFiles,
+  listWorkspaceFiles,
+  resolveWorkspaceDir,
+} from '../core/workspace';
+import { getBuiltinPresets } from '../presets/index';
 
 interface ApplyOptions {
-  dryRun?: boolean;
-  noBackup?: boolean;
   clean?: boolean;
+  dryRun?: boolean;
   force?: boolean;
+  noBackup?: boolean;
 }
 
 function resolveBuiltinPresetDir(presetName: string): string {
@@ -32,7 +37,10 @@ function hasPresetConfig(preset: PresetManifest): boolean {
   return Boolean(preset.config && Object.keys(preset.config).length > 0);
 }
 
-export async function applyCommand(presetName: string, options: ApplyOptions = {}): Promise<void> {
+export async function applyCommand(
+  presetName: string,
+  options: ApplyOptions = {}
+): Promise<void> {
   const paths = await resolveOpenClawPaths();
 
   let preset: PresetManifest;
@@ -40,7 +48,9 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
 
   if (isGitHubRef(presetName)) {
     const { owner, repo } = parseGitHubRef(presetName);
-    const cachePath = await cloneToCache(owner, repo, paths.presetsDir, { force: options.force });
+    const cachePath = await cloneToCache(owner, repo, paths.presetsDir, {
+      force: options.force,
+    });
     preset = await loadPreset(cachePath);
     presetDir = cachePath;
     console.log(pc.green(`Remote preset '${owner}/${repo}' ready.`));
@@ -50,10 +60,12 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
       preset = await loadPreset(userPresetPath);
       presetDir = userPresetPath;
     } catch {
-      const builtinPreset = (await getBuiltinPresets()).find((candidate) => candidate.name === presetName);
+      const builtinPreset = (await getBuiltinPresets()).find(
+        (candidate) => candidate.name === presetName
+      );
       if (!builtinPreset) {
         throw new Error(
-          `Preset '${presetName}' not found. Run 'oh-my-openclaw list' to see available presets.`,
+          `Preset '${presetName}' not found. Run 'oh-my-openclaw list' to see available presets.`
         );
       }
       preset = builtinPreset;
@@ -82,7 +94,7 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
         const workspaceBackupPath = await createWorkspaceBackup(
           workspaceDir,
           paths.backupsDir,
-          existingWorkspaceFiles,
+          existingWorkspaceFiles
         );
         console.log(pc.dim(`Workspace backup created: ${workspaceBackupPath}`));
       }
@@ -100,13 +112,22 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
 
     currentConfig = {};
     configExists = false;
-    console.log(pc.yellow('Clean install: existing config and workspace files removed.'));
+    console.log(
+      pc.yellow('Clean install: existing config and workspace files removed.')
+    );
   }
 
   let mergedConfig = currentConfig;
   if (hasPresetConfig(preset)) {
-    const filteredPresetConfig = filterSensitiveFields(preset.config as Record<string, unknown>);
-    mergedConfig = deepMerge(currentConfig, filteredPresetConfig);
+    const filteredPresetConfig = filterSensitiveFields(
+      preset.config as Record<string, unknown>
+    );
+    const rawMerged = deepMerge(currentConfig, filteredPresetConfig);
+    const { config: migrated, applied } = migrateLegacyKeys(rawMerged);
+    mergedConfig = migrated;
+    if (applied.length > 0) {
+      console.log(pc.dim(`Legacy key migration: ${applied.join(', ')}`));
+    }
   }
 
   if (options.dryRun) {
@@ -116,7 +137,9 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
     }
     console.log(`Preset: ${pc.bold(preset.name)} (${preset.description})`);
     if (hasPresetConfig(preset)) {
-      console.log(`Config changes: ${Object.keys(preset.config as Record<string, unknown>).length} top-level keys`);
+      console.log(
+        `Config changes: ${Object.keys(preset.config as Record<string, unknown>).length} top-level keys`
+      );
     }
     if (preset.workspaceFiles?.length) {
       console.log(`Workspace files: ${preset.workspaceFiles.join(', ')}`);
@@ -137,7 +160,7 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
         const workspaceBackupPath = await createWorkspaceBackup(
           workspaceDir,
           paths.backupsDir,
-          existingWorkspaceFiles,
+          existingWorkspaceFiles
         );
         console.log(pc.dim(`Workspace backup created: ${workspaceBackupPath}`));
       }
@@ -145,10 +168,18 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
   }
 
   if (hasPresetConfig(preset)) {
-    if (!configExists) {
-      console.log(pc.yellow('Warning: config file not found. Creating new config from preset.'));
+    if (configExists) {
+      console.log(
+        pc.yellow(
+          'Warning: JSON5 comments in your config will be lost (known MVP limitation).'
+        )
+      );
     } else {
-      console.log(pc.yellow('Warning: JSON5 comments in your config will be lost (known MVP limitation).'));
+      console.log(
+        pc.yellow(
+          'Warning: config file not found. Creating new config from preset.'
+        )
+      );
     }
     await fs.mkdir(path.dirname(paths.configPath), { recursive: true });
     await writeJson5(paths.configPath, mergedConfig);
@@ -156,9 +187,13 @@ export async function applyCommand(presetName: string, options: ApplyOptions = {
 
   if (preset.workspaceFiles?.length) {
     await copyWorkspaceFiles(presetDir, workspaceDir, preset.workspaceFiles);
-    console.log(pc.green(`OK Workspace files copied: ${preset.workspaceFiles.join(', ')}`));
+    console.log(
+      pc.green(`OK Workspace files copied: ${preset.workspaceFiles.join(', ')}`)
+    );
   }
 
   console.log(pc.green(`\nOK Preset '${preset.name}' applied.`));
-  console.log(pc.bold(pc.yellow("Run 'openclaw gateway restart' to activate changes.")));
+  console.log(
+    pc.bold(pc.yellow("Run 'openclaw gateway restart' to activate changes."))
+  );
 }

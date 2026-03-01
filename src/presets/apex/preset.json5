@@ -14,7 +14,16 @@
     agents: {
       defaults: {
         model: {
-          primary: 'anthropic/claude-sonnet-4-5',
+          primary: 'anthropic/claude-opus-4-6',
+        },
+        contextTokens: 700000,
+        models: {
+          'anthropic/claude-opus-4-6': {
+            params: {
+              context1m: true,
+              speed: 'fast',
+            },
+          },
         },
       },
     },

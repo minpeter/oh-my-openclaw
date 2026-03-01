@@ -1,10 +1,9 @@
+import { afterEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, test } from 'bun:test';
-
-import { OH_MY_OPENCLAW_DIR } from '../constants';
 import { resolveOpenClawPaths } from '../config-path';
+import { OH_MY_OPENCLAW_DIR } from '../constants';
 
 const originalEnv = { ...process.env };
 const tempDirs: string[] = [];
@@ -24,7 +23,9 @@ describe('resolveOpenClawPaths', () => {
 
     const resolved = await resolveOpenClawPaths();
 
-    expect(resolved.configPath).toBe(path.join(os.homedir(), '.openclaw', 'openclaw.json'));
+    expect(resolved.configPath).toBe(
+      path.join(os.homedir(), '.openclaw', 'openclaw.json')
+    );
     expect(resolved.stateDir).toBe(path.join(os.homedir(), '.openclaw'));
   });
 
@@ -56,8 +57,12 @@ describe('resolveOpenClawPaths', () => {
 
     const resolved = await resolveOpenClawPaths();
 
-    expect(resolved.presetsDir).toBe(path.join(stateDir, OH_MY_OPENCLAW_DIR, 'presets'));
-    expect(resolved.backupsDir).toBe(path.join(stateDir, OH_MY_OPENCLAW_DIR, 'backups'));
+    expect(resolved.presetsDir).toBe(
+      path.join(stateDir, OH_MY_OPENCLAW_DIR, 'presets')
+    );
+    expect(resolved.backupsDir).toBe(
+      path.join(stateDir, OH_MY_OPENCLAW_DIR, 'backups')
+    );
     expect(resolved.workspaceDir).toBe(path.join(stateDir, 'workspace'));
     expect(fs.existsSync(resolved.presetsDir)).toBe(true);
     expect(fs.existsSync(resolved.backupsDir)).toBe(true);

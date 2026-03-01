@@ -1,8 +1,7 @@
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 
 import { listCommand } from '../list';
 
@@ -15,11 +14,16 @@ describe('listCommand', () => {
     output = [];
     console.log = (...args: unknown[]) => {
       // Strip ANSI escape codes so regex matching works regardless of color support
-      const stripped = args.map(String).join(' ').replace(/\x1b\[[0-9;]*m/g, '');
+      const stripped = args
+        .map(String)
+        .join(' ')
+        .replace(/\x1b\[[0-9;]*m/g, '');
       output.push(stripped);
     };
 
-    tempStateDir = await fs.mkdtemp(path.join(os.tmpdir(), 'openclaw-list-test-'));
+    tempStateDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'openclaw-list-test-')
+    );
     process.env.OPENCLAW_STATE_DIR = tempStateDir;
     delete process.env.OPENCLAW_CONFIG_PATH;
   });
@@ -42,17 +46,21 @@ describe('listCommand', () => {
     expect(combined).toContain('apex');
     expect(combined).toContain('[builtin]');
 
-    const nameLines = output.filter((line) => /^\s{2}\S+ \[builtin\]$/.test(line));
+    const nameLines = output.filter((line) =>
+      /^\s{2}\S+ \[builtin\]$/.test(line)
+    );
     expect(nameLines.length).toBe(1);
 
-    const versionLines = output.filter((line) => line.trimStart().startsWith('v'));
+    const versionLines = output.filter((line) =>
+      line.trimStart().startsWith('v')
+    );
     expect(versionLines.length).toBe(1);
   });
 
   test('--json flag outputs valid JSON array', async () => {
     await listCommand({ json: true });
 
-    const json = JSON.parse(output.join('\n')) as Array<Record<string, unknown>>;
+    const json = JSON.parse(output.join('\n')) as Record<string, unknown>[];
     expect(Array.isArray(json)).toBe(true);
     expect(json).toHaveLength(1);
 

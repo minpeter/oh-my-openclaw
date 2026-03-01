@@ -1,7 +1,7 @@
+import { afterEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, test } from 'bun:test';
 
 import { listPresets, loadPreset, savePreset } from '../preset-loader';
 import type { PresetManifest } from '../types';
@@ -14,7 +14,10 @@ async function createTempDir(prefix: string): Promise<string> {
   return dir;
 }
 
-async function writePresetManifest(presetDir: string, manifest: Record<string, unknown>) {
+async function writePresetManifest(
+  presetDir: string,
+  manifest: Record<string, unknown>
+) {
   await fs.mkdir(presetDir, { recursive: true });
   const content = JSON.stringify(manifest);
   await fs.writeFile(path.join(presetDir, 'preset.json5'), content, 'utf-8');
@@ -24,7 +27,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map(async (dir) => {
       await fs.rm(dir, { recursive: true, force: true });
-    }),
+    })
   );
 });
 
@@ -49,7 +52,9 @@ describe('loadPreset', () => {
     const presetsRoot = await createTempDir('missing-preset');
     const nonExistentDir = path.join(presetsRoot, 'no-such-preset');
 
-    await expect(loadPreset(nonExistentDir)).rejects.toThrow('Preset not found:');
+    await expect(loadPreset(nonExistentDir)).rejects.toThrow(
+      'Preset not found:'
+    );
   });
 
   test('throws on missing required field: name', async () => {
@@ -61,7 +66,7 @@ describe('loadPreset', () => {
     });
 
     await expect(loadPreset(presetDir)).rejects.toThrow(
-      'Preset missing required field: name',
+      'Preset missing required field: name'
     );
   });
 
@@ -74,7 +79,7 @@ describe('loadPreset', () => {
     });
 
     await expect(loadPreset(presetDir)).rejects.toThrow(
-      'Preset missing required field: description',
+      'Preset missing required field: description'
     );
   });
 
@@ -87,7 +92,7 @@ describe('loadPreset', () => {
     });
 
     await expect(loadPreset(presetDir)).rejects.toThrow(
-      'Preset missing required field: version',
+      'Preset missing required field: version'
     );
   });
 
@@ -123,7 +128,12 @@ describe('listPresets', () => {
     });
 
     const builtins: PresetManifest[] = [
-      { name: 'builtin-preset', description: 'Built-in preset', version: '1.0.0', builtin: true },
+      {
+        name: 'builtin-preset',
+        description: 'Built-in preset',
+        version: '1.0.0',
+        builtin: true,
+      },
     ];
 
     const result = await listPresets(presetsRoot, builtins);
@@ -145,7 +155,12 @@ describe('listPresets', () => {
     });
 
     const builtins: PresetManifest[] = [
-      { name: 'shared-preset', description: 'Builtin version', version: '1.0.0', builtin: true },
+      {
+        name: 'shared-preset',
+        description: 'Builtin version',
+        version: '1.0.0',
+        builtin: true,
+      },
     ];
 
     const result = await listPresets(presetsRoot, builtins);
@@ -159,7 +174,12 @@ describe('listPresets', () => {
     const nonExistentDir = path.join(os.tmpdir(), `no-presets-${Date.now()}`);
 
     const builtins: PresetManifest[] = [
-      { name: 'builtin-only', description: 'Only builtin', version: '1.0.0', builtin: true },
+      {
+        name: 'builtin-only',
+        description: 'Only builtin',
+        version: '1.0.0',
+        builtin: true,
+      },
     ];
 
     const result = await listPresets(nonExistentDir, builtins);
@@ -256,8 +276,14 @@ describe('savePreset', () => {
 
     await savePreset(presetDir, manifest, workspaceFiles);
 
-    const agentsContent = await fs.readFile(path.join(presetDir, 'AGENTS.md'), 'utf-8');
-    const soulContent = await fs.readFile(path.join(presetDir, 'SOUL.md'), 'utf-8');
+    const agentsContent = await fs.readFile(
+      path.join(presetDir, 'AGENTS.md'),
+      'utf-8'
+    );
+    const soulContent = await fs.readFile(
+      path.join(presetDir, 'SOUL.md'),
+      'utf-8'
+    );
 
     expect(agentsContent).toBe('# Agents\nSome content');
     expect(soulContent).toBe('# Soul\nSome soul content');

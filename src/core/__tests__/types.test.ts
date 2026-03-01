@@ -1,6 +1,6 @@
+import { describe, expect, test } from 'bun:test';
 import os from 'node:os';
 import path from 'node:path';
-import { describe, expect, test } from 'bun:test';
 
 import {
   DEFAULT_CONFIG_PATH,
@@ -14,7 +14,7 @@ describe('core constants', () => {
   test('has required sensitive fields', () => {
     expect(SENSITIVE_FIELDS.length).toBeGreaterThanOrEqual(5);
 
-    const required: Array<(typeof SENSITIVE_FIELDS)[number]> = [
+    const required: (typeof SENSITIVE_FIELDS)[number][] = [
       'auth',
       'env',
       'meta',
@@ -45,7 +45,7 @@ describe('core constants', () => {
 
   test('has non-empty constant values', () => {
     expect(DEFAULT_CONFIG_PATH).toBe(
-      path.join(os.homedir(), '.openclaw', 'openclaw.json'),
+      path.join(os.homedir(), '.openclaw', 'openclaw.json')
     );
     expect(OH_MY_OPENCLAW_DIR).toBe('oh-my-openclaw');
     expect(PRESET_MANIFEST_FILENAME).toBe('preset.json5');

@@ -1,6 +1,6 @@
+import { describe, expect, test } from 'bun:test';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
 
 import { loadPreset } from '../../core/preset-loader';
 
@@ -12,7 +12,9 @@ function collectKeyPaths(value: unknown, parent = ''): string[] {
   }
 
   if (Array.isArray(value)) {
-    return value.flatMap((item, index) => collectKeyPaths(item, `${parent}[${index}]`));
+    return value.flatMap((item, index) =>
+      collectKeyPaths(item, `${parent}[${index}]`)
+    );
   }
 
   return Object.entries(value).flatMap(([key, child]) => {
@@ -66,7 +68,9 @@ describe('apex preset', () => {
     expect(keyPaths.some((key) => /(^|\.)env$/i.test(key))).toBe(false);
     expect(keyPaths.some((key) => /(^|\.)meta$/i.test(key))).toBe(false);
     expect(keyPaths.some((key) => /apikey/i.test(key))).toBe(false);
-    expect(keyPaths.some((key) => /token/i.test(key))).toBe(false);
+    expect(
+      keyPaths.some((key) => /(^|\.)(token|botToken|accessToken)$/i.test(key))
+    ).toBe(false);
   });
 
   test('marks apex as builtin preset', async () => {

@@ -1,9 +1,14 @@
+import { afterEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, describe, expect, test } from 'bun:test';
 
-import { parseJson5, readJson5, stringifyJson5, writeJson5 } from '../json5-utils';
+import {
+  parseJson5,
+  readJson5,
+  stringifyJson5,
+  writeJson5,
+} from '../json5-utils';
 
 const tempPaths: string[] = [];
 
@@ -17,14 +22,18 @@ afterEach(async () => {
   await Promise.all(
     tempPaths.splice(0).map(async (tempPath) => {
       await fs.rm(tempPath, { recursive: true, force: true });
-    }),
+    })
   );
 });
 
 describe('json5-utils', () => {
   test('reads valid JSON5 with comments and trailing commas', async () => {
     const filePath = await createTempPath('valid.json5');
-    await fs.writeFile(filePath, '{\n  // comment\n  name: "test",\n  enabled: true,\n}\n', 'utf-8');
+    await fs.writeFile(
+      filePath,
+      '{\n  // comment\n  name: "test",\n  enabled: true,\n}\n',
+      'utf-8'
+    );
 
     const snapshot = await readJson5(filePath);
 
@@ -40,20 +49,26 @@ describe('json5-utils', () => {
     const written = await fs.readFile(filePath, 'utf-8');
 
     expect(written).toContain('\n  nested: {\n    value: 1,\n  },\n');
-    expect(written).toBe(stringifyJson5({ name: 'test', nested: { value: 1 } }));
+    expect(written).toBe(
+      stringifyJson5({ name: 'test', nested: { value: 1 } })
+    );
   });
 
   test('throws descriptive error for missing file', async () => {
     const filePath = path.join(os.tmpdir(), `missing-${Date.now()}.json5`);
 
-    return expect(readJson5(filePath)).rejects.toThrow(`Cannot read file: ${filePath}`);
+    return expect(readJson5(filePath)).rejects.toThrow(
+      `Cannot read file: ${filePath}`
+    );
   });
 
   test('throws descriptive error for invalid JSON5 syntax', async () => {
     const filePath = await createTempPath('invalid.json5');
     await fs.writeFile(filePath, '{unclosed', 'utf-8');
 
-    return expect(readJson5(filePath)).rejects.toThrow(`Invalid JSON5 in ${filePath}:`);
+    return expect(readJson5(filePath)).rejects.toThrow(
+      `Invalid JSON5 in ${filePath}:`
+    );
   });
 
   test('returns empty object for empty file', async () => {

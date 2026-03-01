@@ -1,14 +1,14 @@
-import path from 'node:path';
 import fs from 'node:fs/promises';
-import { readJson5, writeJson5 } from './json5-utils';
+import path from 'node:path';
 import { PRESET_MANIFEST_FILENAME } from './constants';
-import type { PresetManifest } from './types';
+import { readJson5, writeJson5 } from './json5-utils';
+import type { ConfigSnapshot, PresetManifest } from './types';
 
 // Reads preset.json5 from a preset directory, validates required fields
 export async function loadPreset(presetPath: string): Promise<PresetManifest> {
   const manifestPath = path.join(presetPath, PRESET_MANIFEST_FILENAME);
 
-  let snapshot;
+  let snapshot: ConfigSnapshot;
   try {
     snapshot = await readJson5(manifestPath);
   } catch {
@@ -17,11 +17,19 @@ export async function loadPreset(presetPath: string): Promise<PresetManifest> {
 
   const manifest = snapshot.parsed as Partial<PresetManifest>;
 
-  if (!manifest.name) throw new Error(`Preset missing required field: name (in ${manifestPath})`);
-  if (!manifest.description)
-    throw new Error(`Preset missing required field: description (in ${manifestPath})`);
-  if (!manifest.version)
-    throw new Error(`Preset missing required field: version (in ${manifestPath})`);
+  if (!manifest.name) {
+    throw new Error(`Preset missing required field: name (in ${manifestPath})`);
+  }
+  if (!manifest.description) {
+    throw new Error(
+      `Preset missing required field: description (in ${manifestPath})`
+    );
+  }
+  if (!manifest.version) {
+    throw new Error(
+      `Preset missing required field: version (in ${manifestPath})`
+    );
+  }
 
   return manifest as PresetManifest;
 }
@@ -30,7 +38,7 @@ export async function loadPreset(presetPath: string): Promise<PresetManifest> {
 // User presets take precedence over built-in presets with same name
 export async function listPresets(
   presetsDir: string,
-  builtinPresets: PresetManifest[],
+  builtinPresets: PresetManifest[]
 ): Promise<PresetManifest[]> {
   const userPresets: PresetManifest[] = [];
 
@@ -52,7 +60,9 @@ export async function listPresets(
 
   // User presets override built-ins with same name
   const userPresetNames = new Set(userPresets.map((p) => p.name));
-  const filteredBuiltins = builtinPresets.filter((p) => !userPresetNames.has(p.name));
+  const filteredBuiltins = builtinPresets.filter(
+    (p) => !userPresetNames.has(p.name)
+  );
 
   return [...filteredBuiltins, ...userPresets];
 }
@@ -61,12 +71,15 @@ export async function listPresets(
 export async function savePreset(
   presetDir: string,
   manifest: PresetManifest,
-  workspaceFiles?: Map<string, string>,
+  workspaceFiles?: Map<string, string>
 ): Promise<void> {
   await fs.mkdir(presetDir, { recursive: true });
 
   const manifestPath = path.join(presetDir, PRESET_MANIFEST_FILENAME);
-  await writeJson5(manifestPath, manifest as unknown as Record<string, unknown>);
+  await writeJson5(
+    manifestPath,
+    manifest as unknown as Record<string, unknown>
+  );
 
   if (workspaceFiles) {
     for (const [filename, content] of workspaceFiles) {

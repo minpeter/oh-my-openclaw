@@ -1,7 +1,7 @@
+import { afterEach, describe, expect, test } from 'bun:test';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
-import { afterEach, describe, expect, test } from 'bun:test';
 
 import { createBackup, listBackups } from '../backup';
 
@@ -17,7 +17,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map(async (dir) => {
       await rm(dir, { recursive: true, force: true });
-    }),
+    })
   );
 });
 
@@ -66,9 +66,18 @@ describe('backup manager', () => {
   test('listBackups returns sorted backups (newest first)', async () => {
     const tempDir = await createTempDir('backup-list-');
 
-    const oldest = path.join(tempDir, 'openclaw.json.2025-01-01T00-00-00-000Z.bak');
-    const middle = path.join(tempDir, 'openclaw.json.2025-06-01T00-00-00-000Z.bak');
-    const newest = path.join(tempDir, 'openclaw.json.2025-12-31T23-59-59-999Z.bak');
+    const oldest = path.join(
+      tempDir,
+      'openclaw.json.2025-01-01T00-00-00-000Z.bak'
+    );
+    const middle = path.join(
+      tempDir,
+      'openclaw.json.2025-06-01T00-00-00-000Z.bak'
+    );
+    const newest = path.join(
+      tempDir,
+      'openclaw.json.2025-12-31T23-59-59-999Z.bak'
+    );
     const nonBackup = path.join(tempDir, 'openclaw.json');
 
     await writeFile(oldest, '1');

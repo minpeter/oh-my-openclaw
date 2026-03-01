@@ -27,13 +27,21 @@ function isPathTraversalAttempt(input: string): boolean {
 }
 
 export function isGitHubRef(input: string): boolean {
-  if (!input) return false;
-  if (isPathTraversalAttempt(input)) return false;
+  if (!input) {
+    return false;
+  }
+  if (isPathTraversalAttempt(input)) {
+    return false;
+  }
 
-  if (input.startsWith('https://github.com/')) return true;
+  if (input.startsWith('https://github.com/')) {
+    return true;
+  }
 
   const parts = input.split('/');
-  if (parts.length !== 2) return false;
+  if (parts.length !== 2) {
+    return false;
+  }
 
   const [owner, repo] = parts;
   return owner.length > 0 && repo.length > 0;
@@ -69,7 +77,7 @@ export function parseGitHubRef(input: string): { owner: string; repo: string } {
     [owner, repo] = parts;
   }
 
-  if (!owner || !repo) {
+  if (!(owner && repo)) {
     throw new Error(errorMessage);
   }
 
@@ -77,11 +85,13 @@ export function parseGitHubRef(input: string): { owner: string; repo: string } {
     repo = repo.slice(0, -'.git'.length);
   }
 
-  if (!owner || !repo) {
+  if (!(owner && repo)) {
     throw new Error(errorMessage);
   }
 
-  if (!GITHUB_OWNER_REPO_REGEX.test(owner) || !GITHUB_OWNER_REPO_REGEX.test(repo)) {
+  if (
+    !(GITHUB_OWNER_REPO_REGEX.test(owner) && GITHUB_OWNER_REPO_REGEX.test(repo))
+  ) {
     throw new Error(errorMessage);
   }
 
@@ -92,7 +102,7 @@ export async function cloneToCache(
   owner: string,
   repo: string,
   presetsDir: string,
-  options?: { force?: boolean },
+  options?: { force?: boolean }
 ): Promise<string> {
   const cachePath = path.join(presetsDir, `${owner}--${repo}`);
   const cacheExists = await fs
@@ -105,19 +115,23 @@ export async function cloneToCache(
     return cachePath;
   }
 
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'oh-my-openclaw-remote-'));
+  const tmpDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'oh-my-openclaw-remote-')
+  );
 
   try {
     await withTimeout(
       Bun.$`git clone --depth 1 https://github.com/${owner}/${repo}.git ${tmpDir}`.quiet(),
-      30_000,
+      30_000
     );
     await fs.rm(path.join(tmpDir, '.git'), { recursive: true, force: true });
     await fs.rm(cachePath, { recursive: true, force: true });
     await fs.rename(tmpDir, cachePath);
     return cachePath;
   } catch {
-    throw new Error(`Failed to clone '${owner}/${repo}'. Ensure the repository exists and is public.`);
+    throw new Error(
+      `Failed to clone '${owner}/${repo}'. Ensure the repository exists and is public.`
+    );
   } finally {
     await fs.rm(tmpDir, { recursive: true, force: true }).catch(() => {});
   }

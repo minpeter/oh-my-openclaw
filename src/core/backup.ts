@@ -1,9 +1,9 @@
-import path from 'node:path';
 import fs from 'node:fs/promises';
+import path from 'node:path';
 
 export async function createBackup(
   configPath: string,
-  backupsDir: string,
+  backupsDir: string
 ): Promise<string> {
   await fs.mkdir(backupsDir, { recursive: true });
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -16,7 +16,7 @@ export async function createBackup(
 export async function createWorkspaceBackup(
   workspaceDir: string,
   backupsDir: string,
-  files: string[],
+  files: string[]
 ): Promise<string> {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const backupSubDir = path.join(backupsDir, `workspace.${timestamp}`);
@@ -28,9 +28,7 @@ export async function createWorkspaceBackup(
 
     try {
       await fs.copyFile(src, dest);
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 
   return backupSubDir;
@@ -51,7 +49,7 @@ export async function listBackups(backupsDir: string): Promise<string[]> {
 
 export async function restoreBackup(
   backupPath: string,
-  configPath: string,
+  configPath: string
 ): Promise<void> {
   await fs.copyFile(backupPath, configPath);
 }

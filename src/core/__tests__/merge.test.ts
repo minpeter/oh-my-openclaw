@@ -10,10 +10,7 @@ describe('deepMerge', () => {
   });
 
   test('nested object merge', () => {
-    const result = deepMerge(
-      { a: { b: 1, c: 2 } },
-      { a: { b: 3 } },
-    );
+    const result = deepMerge({ a: { b: 1, c: 2 } }, { a: { b: 3 } });
 
     expect(result).toEqual({ a: { b: 3, c: 2 } });
   });
@@ -52,7 +49,7 @@ describe('deepMerge', () => {
   test('3-level deep merge', () => {
     const result = deepMerge(
       { a: { b: { c: 1, d: 2 } } },
-      { a: { b: { c: 99 } } },
+      { a: { b: { c: 99 } } }
     );
 
     expect(result).toEqual({ a: { b: { c: 99, d: 2 } } });
@@ -83,7 +80,7 @@ describe('deepMerge', () => {
       {
         identity: { name: 'DevBot' },
         tools: { allow: ['read', 'write', 'exec'] },
-      },
+      }
     );
 
     expect(result).toEqual({

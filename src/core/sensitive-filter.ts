@@ -42,7 +42,7 @@ export function isSensitivePath(keyPath: string[]): boolean {
 
 export function filterSensitiveFields(
   config: Record<string, unknown>,
-  keyPath: string[] = [],
+  keyPath: string[] = []
 ): Record<string, unknown> {
   const result: Record<string, unknown> = {};
 
@@ -54,7 +54,10 @@ export function filterSensitiveFields(
     }
 
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-      result[key] = filterSensitiveFields(value as Record<string, unknown>, currentPath);
+      result[key] = filterSensitiveFields(
+        value as Record<string, unknown>,
+        currentPath
+      );
       continue;
     }
 

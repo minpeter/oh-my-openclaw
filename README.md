@@ -155,6 +155,7 @@ Remote presets are automatically cached as user presets at `~/.openclaw/oh-my-op
 ## Development
 - **Prerequisites:** Bun
 - **Install dependencies:** `bun install`
+- **Run lint:** `bun run lint`
 - **Run tests:** `bun test`
 - **Type check:** `bun run typecheck`
 - **Build binary:** `bun run build:compile`

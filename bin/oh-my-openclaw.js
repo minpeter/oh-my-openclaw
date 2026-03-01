@@ -1,2 +1,2 @@
 #!/usr/bin/env bun
-import '../src/cli.ts'
+import '../src/cli.ts';

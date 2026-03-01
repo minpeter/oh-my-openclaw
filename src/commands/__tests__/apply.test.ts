@@ -1,18 +1,17 @@
+import { afterEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-
-import { afterEach, describe, expect, test } from 'bun:test';
 import JSON5 from 'json5';
 
 import { applyCommand } from '../apply';
 
 interface TempEnv {
-  stateDir: string;
-  configPath: string;
-  workspaceDir: string;
-  presetsDir: string;
   backupsDir: string;
+  configPath: string;
+  presetsDir: string;
+  stateDir: string;
+  workspaceDir: string;
 }
 
 const tempDirs: string[] = [];
@@ -38,12 +37,20 @@ async function createTempEnv(prefix: string): Promise<TempEnv> {
   return { stateDir, configPath, workspaceDir, presetsDir, backupsDir };
 }
 
-async function writeConfig(configPath: string, data: Record<string, unknown>): Promise<void> {
+async function writeConfig(
+  configPath: string,
+  data: Record<string, unknown>
+): Promise<void> {
   await fs.writeFile(configPath, JSON5.stringify(data, null, 2), 'utf-8');
 }
 
-async function readConfig(configPath: string): Promise<Record<string, unknown>> {
-  return JSON5.parse(await fs.readFile(configPath, 'utf-8')) as Record<string, unknown>;
+async function readConfig(
+  configPath: string
+): Promise<Record<string, unknown>> {
+  return JSON5.parse(await fs.readFile(configPath, 'utf-8')) as Record<
+    string,
+    unknown
+  >;
 }
 
 async function fileExists(filePath: string): Promise<boolean> {
@@ -59,11 +66,15 @@ async function writeUserPreset(
   presetsDir: string,
   presetName: string,
   manifest: Record<string, unknown>,
-  workspaceFiles: Record<string, string> = {},
+  workspaceFiles: Record<string, string> = {}
 ): Promise<void> {
   const presetDir = path.join(presetsDir, presetName);
   await fs.mkdir(presetDir, { recursive: true });
-  await fs.writeFile(path.join(presetDir, 'preset.json5'), JSON5.stringify(manifest, null, 2), 'utf-8');
+  await fs.writeFile(
+    path.join(presetDir, 'preset.json5'),
+    JSON5.stringify(manifest, null, 2),
+    'utf-8'
+  );
 
   for (const [filename, content] of Object.entries(workspaceFiles)) {
     await fs.writeFile(path.join(presetDir, filename), content, 'utf-8');
@@ -91,7 +102,7 @@ afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map(async (tempDir) => {
       await fs.rm(tempDir, { recursive: true, force: true });
-    }),
+    })
   );
 });
 
@@ -112,7 +123,9 @@ describe('applyCommand', () => {
       version: '1.0.0',
       config: {
         identity: { name: 'NewBot' },
-        agents: { defaults: { model: { primary: 'anthropic/claude-sonnet-4-5' } } },
+        agents: {
+          defaults: { model: { primary: 'anthropic/claude-sonnet-4-5' } },
+        },
         tools: { allow: ['read', 'write'] },
       },
     });
@@ -121,12 +134,12 @@ describe('applyCommand', () => {
 
     const merged = await readConfig(env.configPath);
     expect(merged).toEqual({
-      identity: { name: 'NewBot', emoji: 'lobster' },
       agents: {
         defaults: {
           temperature: 0.2,
           model: { primary: 'anthropic/claude-sonnet-4-5' },
         },
+        list: [{ id: 'main', identity: { name: 'NewBot', emoji: 'lobster' } }],
       },
       tools: { allow: ['read', 'write'] },
       untouched: { keep: true },
@@ -150,13 +163,19 @@ describe('applyCommand', () => {
       {
         'AGENTS.md': '# Agents\nWorkspace copy test',
         'SOUL.md': '# Soul\nWorkspace copy test',
-      },
+      }
     );
 
     await applyCommand('workspace-preset');
 
-    const agents = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
-    const soul = await fs.readFile(path.join(env.workspaceDir, 'SOUL.md'), 'utf-8');
+    const agents = await fs.readFile(
+      path.join(env.workspaceDir, 'AGENTS.md'),
+      'utf-8'
+    );
+    const soul = await fs.readFile(
+      path.join(env.workspaceDir, 'SOUL.md'),
+      'utf-8'
+    );
 
     expect(agents).toBe('# Agents\nWorkspace copy test');
     expect(soul).toBe('# Soul\nWorkspace copy test');
@@ -183,17 +202,28 @@ describe('applyCommand', () => {
     await applyCommand('backup-preset');
 
     const backupEntries = await fs.readdir(env.backupsDir);
-    const configBackups = backupEntries.filter((entry) => entry.endsWith('.bak'));
+    const configBackups = backupEntries.filter((entry) =>
+      entry.endsWith('.bak')
+    );
 
     expect(configBackups.length).toBe(1);
 
     const backupConfig = JSON5.parse(
-      await fs.readFile(path.join(env.backupsDir, configBackups[0]), 'utf-8'),
+      await fs.readFile(path.join(env.backupsDir, configBackups[0]), 'utf-8')
     ) as Record<string, unknown>;
     expect(backupConfig).toEqual(beforeConfig);
 
     const updated = await readConfig(env.configPath);
-    expect(updated.identity).toEqual({ name: 'AfterBackup' });
+    expect(
+      (
+        (
+          (updated.agents as Record<string, unknown>).list as Record<
+            string,
+            unknown
+          >[]
+        )[0].identity as Record<string, unknown>
+      ).name
+    ).toBe('AfterBackup');
   });
 
   test('--dry-run shows changes without writing', async () => {
@@ -220,7 +250,9 @@ describe('applyCommand', () => {
 
     const currentConfig = await readConfig(env.configPath);
     expect(currentConfig).toEqual(originalConfig);
-    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(false);
+    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(
+      false
+    );
 
     const backupEntries = await fs.readdir(env.backupsDir);
     expect(backupEntries.length).toBe(0);
@@ -236,7 +268,7 @@ describe('applyCommand', () => {
     await writeConfig(env.configPath, {
       identity: { name: 'BaseBot' },
       env: { BASE_ONLY: 'keep-me' },
-      gateway: { port: 18789, auth: { token: 'base-token' } },
+      gateway: { port: 18_789, auth: { token: 'base-token' } },
       models: {
         providers: {
           custom: {
@@ -256,7 +288,7 @@ describe('applyCommand', () => {
         auth: { profiles: { default: { provider: 'anthropic' } } },
         env: { OPENROUTER_API_KEY: 'new-secret' },
         gateway: {
-          port: 19000,
+          port: 19_000,
           auth: { token: 'new-token' },
         },
         models: {
@@ -274,9 +306,12 @@ describe('applyCommand', () => {
 
     const merged = await readConfig(env.configPath);
     expect(merged).toEqual({
-      identity: { name: 'SafeBot' },
+      agents: {
+        defaults: {},
+        list: [{ id: 'main', identity: { name: 'SafeBot' } }],
+      },
       env: { BASE_ONLY: 'keep-me' },
-      gateway: { port: 19000, auth: { token: 'base-token' } },
+      gateway: { port: 19_000, auth: { token: 'base-token' } },
       models: {
         providers: {
           custom: {
@@ -298,11 +333,22 @@ describe('applyCommand', () => {
     });
 
     const combined = logs.join('\n');
-    expect(combined).toContain("openclaw gateway restart");
+    expect(combined).toContain('openclaw gateway restart');
     expect(combined).toContain("Preset 'apex' applied");
 
     const config = await readConfig(env.configPath);
-    expect(config.identity).toEqual({ name: 'Apex', theme: 'all-in-one power assistant', emoji: '⚡' });
+    expect(
+      (
+        (config.agents as Record<string, unknown>).list as Record<
+          string,
+          unknown
+        >[]
+      )[0].identity
+    ).toEqual({
+      name: 'Apex',
+      theme: 'all-in-one power assistant',
+      emoji: '⚡',
+    });
   });
 
   test('handles preset with only MD files (no config)', async () => {
@@ -322,7 +368,7 @@ describe('applyCommand', () => {
       },
       {
         'AGENTS.md': '# Agents\nMD only',
-      },
+      }
     );
 
     await applyCommand('md-only-preset');
@@ -330,7 +376,10 @@ describe('applyCommand', () => {
     const afterConfig = await readConfig(env.configPath);
     expect(afterConfig).toEqual(beforeConfig);
 
-    const agents = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
+    const agents = await fs.readFile(
+      path.join(env.workspaceDir, 'AGENTS.md'),
+      'utf-8'
+    );
     expect(agents).toBe('# Agents\nMD only');
   });
 
@@ -356,19 +405,35 @@ describe('applyCommand', () => {
 
     const updatedConfig = await readConfig(env.configPath);
     expect(updatedConfig).toEqual({
-      identity: { name: 'ConfigOnlyUpdated' },
+      agents: {
+        defaults: {},
+        list: [{ id: 'main', identity: { name: 'ConfigOnlyUpdated' } }],
+      },
       tools: { allow: ['read', 'write'] },
     });
 
-    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(false);
+    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(
+      false
+    );
   });
 
   test('--clean removes config and workspace files before applying', async () => {
     const env = await createTempEnv('openclaw-apply-clean-');
 
-    await writeConfig(env.configPath, { identity: { name: 'OldBot' }, untouched: { keep: true } });
-    await fs.writeFile(path.join(env.workspaceDir, 'AGENTS.md'), '# Old Agents', 'utf-8');
-    await fs.writeFile(path.join(env.workspaceDir, 'SOUL.md'), '# Old Soul', 'utf-8');
+    await writeConfig(env.configPath, {
+      identity: { name: 'OldBot' },
+      untouched: { keep: true },
+    });
+    await fs.writeFile(
+      path.join(env.workspaceDir, 'AGENTS.md'),
+      '# Old Agents',
+      'utf-8'
+    );
+    await fs.writeFile(
+      path.join(env.workspaceDir, 'SOUL.md'),
+      '# Old Soul',
+      'utf-8'
+    );
 
     const logs = await captureLogs(async () => {
       await applyCommand('apex', { clean: true, noBackup: true });
@@ -376,16 +441,28 @@ describe('applyCommand', () => {
 
     // Config is fresh (not merged with OldBot — 'untouched' key must be gone)
     const config = await readConfig(env.configPath);
-    expect((config.identity as Record<string, unknown>).name).toBe('Apex');
+    expect(
+      (
+        (
+          (config.agents as Record<string, unknown>).list as Record<
+            string,
+            unknown
+          >[]
+        )[0].identity as Record<string, unknown>
+      ).name
+    ).toBe('Apex');
     expect(config.untouched).toBeUndefined();
 
     // Workspace files are overwritten by apex preset files
-    const agentsContent = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
+    const agentsContent = await fs.readFile(
+      path.join(env.workspaceDir, 'AGENTS.md'),
+      'utf-8'
+    );
     expect(agentsContent).not.toBe('# Old Agents');
 
     const combined = logs.join('\n');
     expect(combined).toContain('Clean install');
-  })
+  });
 
   test('--clean creates backup before wiping', async () => {
     const env = await createTempEnv('openclaw-apply-clean-backup-');
@@ -396,11 +473,13 @@ describe('applyCommand', () => {
     await applyCommand('apex', { clean: true });
 
     const backupEntries = await fs.readdir(env.backupsDir);
-    const configBackups = backupEntries.filter((entry) => entry.endsWith('.bak'));
+    const configBackups = backupEntries.filter((entry) =>
+      entry.endsWith('.bak')
+    );
     expect(configBackups.length).toBeGreaterThanOrEqual(1);
 
     const backupConfig = JSON5.parse(
-      await fs.readFile(path.join(env.backupsDir, configBackups[0]), 'utf-8'),
+      await fs.readFile(path.join(env.backupsDir, configBackups[0]), 'utf-8')
     ) as Record<string, unknown>;
     expect(backupConfig).toEqual(beforeConfig);
   });
@@ -409,7 +488,11 @@ describe('applyCommand', () => {
     const env = await createTempEnv('openclaw-apply-clean-dry-');
 
     await writeConfig(env.configPath, { identity: { name: 'DryClean' } });
-    await fs.writeFile(path.join(env.workspaceDir, 'AGENTS.md'), 'original content', 'utf-8');
+    await fs.writeFile(
+      path.join(env.workspaceDir, 'AGENTS.md'),
+      'original content',
+      'utf-8'
+    );
 
     const logs = await captureLogs(async () => {
       await applyCommand('apex', { clean: true, dryRun: true });
@@ -418,7 +501,10 @@ describe('applyCommand', () => {
     const config = await readConfig(env.configPath);
     expect((config.identity as Record<string, unknown>).name).toBe('DryClean');
 
-    const agentsContent = await fs.readFile(path.join(env.workspaceDir, 'AGENTS.md'), 'utf-8');
+    const agentsContent = await fs.readFile(
+      path.join(env.workspaceDir, 'AGENTS.md'),
+      'utf-8'
+    );
     expect(agentsContent).toBe('original content');
 
     const backupEntries = await fs.readdir(env.backupsDir);
@@ -437,8 +523,26 @@ describe('applyCommand', () => {
     await applyCommand('apex', { noBackup: true });
 
     const config = await readConfig(env.configPath);
-    expect((config.identity as Record<string, unknown>).name).toBe('Apex');
-    expect((config.identity as Record<string, unknown>).theme).toBe('all-in-one power assistant');
+    expect(
+      (
+        (
+          (config.agents as Record<string, unknown>).list as Record<
+            string,
+            unknown
+          >[]
+        )[0].identity as Record<string, unknown>
+      ).name
+    ).toBe('Apex');
+    expect(
+      (
+        (
+          (config.agents as Record<string, unknown>).list as Record<
+            string,
+            unknown
+          >[]
+        )[0].identity as Record<string, unknown>
+      ).theme
+    ).toBe('all-in-one power assistant');
   });
 });
 
@@ -459,7 +563,9 @@ describe('remote apply', () => {
     expect(config).not.toEqual({ identity: { name: 'BaseBot' } }); // config changed
 
     // Should have copied workspace files (researcher has AGENTS.md, SOUL.md)
-    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(true);
+    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(
+      true
+    );
   }, 60_000);
 
   test('applies remote preset via full GitHub URL', async () => {
@@ -467,7 +573,9 @@ describe('remote apply', () => {
 
     await writeConfig(env.configPath, { identity: { name: 'BaseBot' } });
 
-    await applyCommand('https://github.com/minpeter/demo-researcher', { noBackup: true });
+    await applyCommand('https://github.com/minpeter/demo-researcher', {
+      noBackup: true,
+    });
 
     const cachePath = path.join(env.presetsDir, 'minpeter--demo-researcher');
     expect(await fileExists(cachePath)).toBe(true);
@@ -500,12 +608,15 @@ describe('remote apply', () => {
 
     // Force re-download — no "cached" message
     const logs = await captureLogs(async () => {
-      await applyCommand('minpeter/demo-researcher', { noBackup: true, force: true });
+      await applyCommand('minpeter/demo-researcher', {
+        noBackup: true,
+        force: true,
+      });
     });
 
     const combined = logs.join('\n');
     expect(combined).not.toContain('Using cached');
-    
+
     // Should still work after force re-download
     const cachePath = path.join(env.presetsDir, 'minpeter--demo-researcher');
     expect(await fileExists(cachePath)).toBe(true);
@@ -518,7 +629,10 @@ describe('remote apply', () => {
     await writeConfig(env.configPath, originalConfig);
 
     const logs = await captureLogs(async () => {
-      await applyCommand('minpeter/demo-researcher', { dryRun: true, noBackup: true });
+      await applyCommand('minpeter/demo-researcher', {
+        dryRun: true,
+        noBackup: true,
+      });
     });
 
     // Config should NOT be changed (dry-run)
@@ -526,7 +640,9 @@ describe('remote apply', () => {
     expect(config).toEqual(originalConfig);
 
     // No workspace files copied (dry-run)
-    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(false);
+    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(
+      false
+    );
 
     // Dry-run output shown
     const combined = logs.join('\n');
@@ -539,7 +655,9 @@ describe('remote apply', () => {
     await writeConfig(env.configPath, { identity: { name: 'BaseBot' } });
 
     await expect(
-      applyCommand('nonexistent-owner-xyz-abc/nonexistent-repo-xyz-abc', { noBackup: true }),
+      applyCommand('nonexistent-owner-xyz-abc/nonexistent-repo-xyz-abc', {
+        noBackup: true,
+      })
     ).rejects.toThrow(/Failed to clone/);
   }, 60_000);
 });

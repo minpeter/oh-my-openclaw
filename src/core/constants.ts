@@ -25,7 +25,7 @@ export const WORKSPACE_FILES = [
 export const DEFAULT_CONFIG_PATH = path.join(
   os.homedir(),
   '.openclaw',
-  'openclaw.json',
+  'openclaw.json'
 );
 
 export const OH_MY_OPENCLAW_DIR = 'oh-my-openclaw';

@@ -1,21 +1,24 @@
-import pc from 'picocolors';
-import path from 'node:path';
 import fs from 'node:fs/promises';
+import path from 'node:path';
+import pc from 'picocolors';
 
 import { resolveOpenClawPaths } from '../core/config-path';
 import { readJson5 } from '../core/json5-utils';
-import { filterSensitiveFields } from '../core/sensitive-filter';
-import { resolveWorkspaceDir, exportWorkspaceFiles } from '../core/workspace';
 import { savePreset } from '../core/preset-loader';
+import { filterSensitiveFields } from '../core/sensitive-filter';
 import type { PresetManifest } from '../core/types';
+import { exportWorkspaceFiles, resolveWorkspaceDir } from '../core/workspace';
 
 interface ExportOptions {
   description?: string;
-  version?: string;
   force?: boolean;
+  version?: string;
 }
 
-export async function exportCommand(name: string, options: ExportOptions = {}): Promise<void> {
+export async function exportCommand(
+  name: string,
+  options: ExportOptions = {}
+): Promise<void> {
   const paths = await resolveOpenClawPaths();
 
   // Check if preset already exists
@@ -23,7 +26,9 @@ export async function exportCommand(name: string, options: ExportOptions = {}): 
   try {
     await fs.access(presetDir);
     if (!options.force) {
-      throw new Error(`Preset '${name}' already exists. Use --force to overwrite.`);
+      throw new Error(
+        `Preset '${name}' already exists. Use --force to overwrite.`
+      );
     }
   } catch (err) {
     if (err instanceof Error && err.message.includes('already exists')) {
@@ -39,7 +44,9 @@ export async function exportCommand(name: string, options: ExportOptions = {}): 
     currentConfig = snapshot.parsed;
   } catch (err) {
     if (err instanceof Error && err.message.startsWith('Cannot read file:')) {
-      console.log(pc.yellow('⚠ No OpenClaw config found. Exporting empty config.'));
+      console.log(
+        pc.yellow('⚠ No OpenClaw config found. Exporting empty config.')
+      );
     } else {
       throw err;
     }
@@ -77,6 +84,8 @@ export async function exportCommand(name: string, options: ExportOptions = {}): 
     console.log(`  Workspace files: ${copiedFiles.join(', ')}`);
   }
   if (Object.keys(filteredConfig).length < Object.keys(currentConfig).length) {
-    console.log(pc.dim('  Note: Sensitive fields (auth, env, meta, etc.) were excluded.'));
+    console.log(
+      pc.dim('  Note: Sensitive fields (auth, env, meta, etc.) were excluded.')
+    );
   }
 }

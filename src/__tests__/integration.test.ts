@@ -14,8 +14,8 @@ import { resolveOpenClawPaths } from '../core/config-path';
 import { loadPreset } from '../core/preset-loader';
 
 interface DiffJsonOutput {
+  changes: { path: string; type: string }[];
   preset: string;
-  changes: Array<{ path: string; type: string }>;
   workspaceFiles: { toAdd: string[]; toReplace: string[] };
 }
 
@@ -41,11 +41,16 @@ describe('integration workflow and edge cases', () => {
     await rm(tempDir, { recursive: true, force: true });
   });
 
-  async function writeJson5File(filePath: string, value: Record<string, unknown>): Promise<void> {
+  async function writeJson5File(
+    filePath: string,
+    value: Record<string, unknown>
+  ): Promise<void> {
     await writeFile(filePath, JSON5.stringify(value, null, 2), 'utf-8');
   }
 
-  async function readJson5File(filePath: string): Promise<Record<string, unknown>> {
+  async function readJson5File(
+    filePath: string
+  ): Promise<Record<string, unknown>> {
     const content = await readFile(filePath, 'utf-8');
     return JSON5.parse(content) as Record<string, unknown>;
   }
@@ -69,12 +74,14 @@ describe('integration workflow and edge cases', () => {
   test('full workflow: export -> list -> diff -> apply -> diff (no diff)', async () => {
     await writeJson5File(configPath, { identity: { name: 'CycleBot' } });
 
-    await exportCommand('cycle-preset', { description: 'Cycle integration test preset' });
+    await exportCommand('cycle-preset', {
+      description: 'Cycle integration test preset',
+    });
 
     const listedRaw = await captureLogs(async () => {
       await listCommand({ json: true });
     });
-    const listed = JSON.parse(listedRaw) as Array<{ name: string }>;
+    const listed = JSON.parse(listedRaw) as { name: string }[];
     expect(listed.some((preset) => preset.name === 'cycle-preset')).toBe(true);
 
     await writeJson5File(configPath, { identity: { name: 'ChangedBot' } });
@@ -100,17 +107,23 @@ describe('integration workflow and edge cases', () => {
     await applyCommand('apex', { noBackup: true });
 
     const createdConfig = await readJson5File(configPath);
-    const identity = createdConfig.identity as Record<string, unknown> | undefined;
-    expect(identity?.name).toBe('Apex');
+    const agents = createdConfig.agents as Record<string, unknown>;
+    const list = agents.list as Record<string, unknown>[];
+    const identity = list[0].identity as Record<string, unknown>;
+    expect(identity.name).toBe('Apex');
   });
 
   test('export from empty workspace stores empty workspaceFiles list', async () => {
-    await writeJson5File(configPath, { identity: { name: 'EmptyWorkspaceBot' } });
+    await writeJson5File(configPath, {
+      identity: { name: 'EmptyWorkspaceBot' },
+    });
 
     await exportCommand('empty-workspace-preset');
 
     const paths = await resolveOpenClawPaths();
-    const preset = await loadPreset(join(paths.presetsDir, 'empty-workspace-preset'));
+    const preset = await loadPreset(
+      join(paths.presetsDir, 'empty-workspace-preset')
+    );
     expect(preset.workspaceFiles).toEqual([]);
   });
 
@@ -130,14 +143,21 @@ describe('integration workflow and edge cases', () => {
       version: '1.0.0',
       workspaceFiles: ['AGENTS.md'],
     });
-    await writeFile(join(presetDir, 'AGENTS.md'), '# MD-only\nWorkspace file only', 'utf-8');
+    await writeFile(
+      join(presetDir, 'AGENTS.md'),
+      '# MD-only\nWorkspace file only',
+      'utf-8'
+    );
 
     await applyCommand('md-only-preset', { noBackup: true });
 
     const afterConfig = await readJson5File(configPath);
     expect(afterConfig).toEqual(initialConfig);
 
-    const copiedAgents = await readFile(join(paths.workspaceDir, 'AGENTS.md'), 'utf-8');
+    const copiedAgents = await readFile(
+      join(paths.workspaceDir, 'AGENTS.md'),
+      'utf-8'
+    );
     expect(copiedAgents).toBe('# MD-only\nWorkspace file only');
   });
 
@@ -162,23 +182,33 @@ describe('integration workflow and edge cases', () => {
     await applyCommand('config-only-preset', { noBackup: true });
 
     const updatedConfig = await readJson5File(configPath);
-    const identity = updatedConfig.identity as Record<string, unknown> | undefined;
-    expect(identity?.name).toBe('ConfigOnlyBot');
+    const agents = updatedConfig.agents as Record<string, unknown>;
+    const list = agents.list as Record<string, unknown>[];
+    const identity = list[0].identity as Record<string, unknown>;
+    expect(identity.name).toBe('ConfigOnlyBot');
 
-    await expect(readFile(join(paths.workspaceDir, 'AGENTS.md'), 'utf-8')).rejects.toThrow();
+    await expect(
+      readFile(join(paths.workspaceDir, 'AGENTS.md'), 'utf-8')
+    ).rejects.toThrow();
   });
 
   test('invalid JSON5 config produces a clear export error', async () => {
     await writeFile(configPath, '{ invalid json5 !!!', 'utf-8');
 
-    await expect(exportCommand('invalid-json5-export')).rejects.toThrow(`Invalid JSON5 in ${configPath}:`);
+    await expect(exportCommand('invalid-json5-export')).rejects.toThrow(
+      `Invalid JSON5 in ${configPath}:`
+    );
   });
 
   test('empty preset directory fails with clear error', async () => {
     const paths = await resolveOpenClawPaths();
-    await mkdir(join(paths.presetsDir, 'empty-preset-dir'), { recursive: true });
+    await mkdir(join(paths.presetsDir, 'empty-preset-dir'), {
+      recursive: true,
+    });
 
-    await expect(applyCommand('empty-preset-dir')).rejects.toThrow("Preset 'empty-preset-dir' not found");
+    await expect(applyCommand('empty-preset-dir')).rejects.toThrow(
+      "Preset 'empty-preset-dir' not found"
+    );
   });
 
   test('multiple applies in sequence each create a backup', async () => {

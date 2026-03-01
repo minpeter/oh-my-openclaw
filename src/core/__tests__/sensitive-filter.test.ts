@@ -21,7 +21,7 @@ describe('filterSensitiveFields', () => {
   test('removes gateway.auth and keeps gateway.port', () => {
     const config = {
       gateway: {
-        port: 18789,
+        port: 18_789,
         auth: { token: 'gateway-secret' },
       },
     };
@@ -30,7 +30,7 @@ describe('filterSensitiveFields', () => {
 
     expect(filtered).toEqual({
       gateway: {
-        port: 18789,
+        port: 18_789,
       },
     });
   });
@@ -93,7 +93,7 @@ describe('filterSensitiveFields', () => {
         },
       },
       gateway: {
-        port: 18789,
+        port: 18_789,
         auth: {
           token: 'gw-secret',
         },
@@ -122,7 +122,7 @@ describe('filterSensitiveFields', () => {
     expect(config).toEqual(original);
     expect(filtered).not.toBe(config);
     expect(filtered).toEqual({
-      gateway: { port: 18789 },
+      gateway: { port: 18_789 },
       channels: { discord: { guilds: { '123': {} } } },
       models: { providers: { custom: { baseUrl: 'https://api.example.com' } } },
     });

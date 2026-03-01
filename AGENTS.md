@@ -119,3 +119,4 @@ bun run clean            # rm -rf dist
 - No CI/CD pipeline (no `.github/workflows`). Validation was done via `.sisyphus/evidence/` artifacts.
 - `build:compile` uses Bun's `--compile --bytecode` for single-file native binary.
 - Target filesystem: `~/.openclaw/` (config, workspace, presets, backups). After applying, user must manually run `openclaw gateway restart`.
+- Project policy: There are currently no real end users. For this machine-local environment, aggressive migrations and breaking updates are acceptable to eliminate legacy quickly.
