@@ -42,4 +42,5 @@
     },
   },
   workspaceFiles: ['AGENTS.md', 'SOUL.md', 'TOOLS.md', 'USER.md', 'IDENTITY.md'],
+  skills: ['prompt-guard'],
 }

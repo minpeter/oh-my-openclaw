@@ -7,6 +7,7 @@ export interface PresetManifest {
   builtin?: boolean;
   config?: Record<string, unknown>;
   workspaceFiles?: string[];
+  skills?: string[];
 }
 
 export interface ResolvedPaths {
