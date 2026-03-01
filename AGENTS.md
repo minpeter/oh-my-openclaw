@@ -71,6 +71,44 @@ Implementation source: `src/core/merge.ts`.
 2. Built-in preset: `src/presets/<name>/`
 3. User preset with same name overrides built-in
 
+## MODEL ROUTING
+
+The apex preset includes a `config.routing` key that enables task-type based model selection. When applied, OpenClaw uses this to route requests to different models depending on the task context.
+
+### Routing Schema
+
+```json5
+{
+  routing: {
+    defaultModel: 'provider/model-name',  // fallback for unmatched tasks
+    rules: [
+      {
+        name: 'rule-name',
+        description: 'Human-readable purpose',
+        triggers: ['trigger-1', 'trigger-2'],  // task-type keywords
+        model: 'provider/model-name',
+      },
+    ],
+  },
+}
+```
+
+### Apex Defaults
+
+| Task Type | Model | Rationale |
+|-----------|-------|-----------|
+| Coding (`tmux-opencode`, `code`, `development`, `debugging`, `refactoring`, `architecture`, `code-review`) | `anthropic/claude-opus-4-6` | Strongest reasoning for complex code tasks |
+| Everything else (conversation, simple queries) | `anthropic/claude-sonnet-4-6` | Faster, cost-efficient for routine interactions |
+
+### How It Works
+
+- Routing config lives in `config.routing` within `preset.json5` and merges into `openclaw.json` via `deepMerge`.
+- `defaultModel` is the fallback when no rule triggers match the current task type.
+- Each rule has a `triggers` array of keyword strings. If the task type matches any trigger, that rule's `model` is used.
+- Rules are evaluated in order; first match wins.
+- The `rules` array replaces entirely on merge (standard array merge semantics — no append).
+- To disable routing, set `routing: null` in a user preset override (delete semantics).
+
 ## ANTI-PATTERNS
 
 - Assuming JSON5 comments survive apply; they are dropped when config is rewritten.
