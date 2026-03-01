@@ -49,6 +49,7 @@ jobs:
         run: bun run build
 
       - name: Create Release Pull Request or Publish
+        if: ${{ secrets.NPM_TOKEN != '' }}
         uses: changesets/action@v1
         with:
           publish: npm publish --provenance --access public
