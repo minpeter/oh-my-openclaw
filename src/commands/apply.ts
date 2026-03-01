@@ -7,6 +7,7 @@ import pc from 'picocolors';
 import { createBackup, createWorkspaceBackup } from '../core/backup';
 import { resolveOpenClawPaths } from '../core/config-path';
 import { WORKSPACE_FILES } from '../core/constants';
+import { fixNodePathIfNeeded } from '../core/fix-node-path';
 import {
   isFileNotFoundError,
   readJson5,
@@ -318,6 +319,8 @@ export async function applyCommand(
       console.log(pc.green(`OK Skills installed: ${installed.join(', ')}`));
     }
   }
+
+  await fixNodePathIfNeeded();
 
   console.log(pc.green(`\nOK Preset '${preset.name}' applied.`));
   console.log(
