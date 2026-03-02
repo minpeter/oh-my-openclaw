@@ -15,6 +15,39 @@ function throwCircularReferenceError(
   );
 }
 
+const OMIT_VALUE = Symbol('omit-value');
+
+function sanitizeObjectOverrideValue(
+  value: unknown
+): Record<string, unknown> | typeof OMIT_VALUE {
+  if (!isPlainObject(value)) {
+    return OMIT_VALUE;
+  }
+
+  const sanitized: Record<string, unknown> = {};
+  for (const [key, child] of Object.entries(value)) {
+    if (child === null || child === undefined) {
+      continue;
+    }
+
+    if (isPlainObject(child)) {
+      const nested = sanitizeObjectOverrideValue(child);
+      if (nested !== OMIT_VALUE) {
+        sanitized[key] = nested;
+      }
+      continue;
+    }
+
+    sanitized[key] = child;
+  }
+
+  if (Object.keys(value).length > 0 && Object.keys(sanitized).length === 0) {
+    return OMIT_VALUE;
+  }
+
+  return sanitized;
+}
+
 function deepMergeInternal(
   base: Record<string, unknown>,
   override: Record<string, unknown>,
@@ -52,6 +85,11 @@ function deepMergeInternal(
         ...path,
         key,
       ]);
+    } else if (isPlainObject(overrideVal)) {
+      const sanitized = sanitizeObjectOverrideValue(overrideVal);
+      if (sanitized !== OMIT_VALUE) {
+        result[key] = sanitized;
+      }
     } else {
       result[key] = overrideVal;
     }

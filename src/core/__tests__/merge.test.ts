@@ -158,6 +158,48 @@ describe('deepMerge', () => {
     expect('nonExistent' in result).toBe(false);
   });
 
+  test('null keys are stripped when adding a new nested object branch', () => {
+    const result = deepMerge(
+      {},
+      { agents: { defaults: { tools: null, model: { primary: 'x' } } } }
+    );
+
+    expect(result).toEqual({
+      agents: {
+        defaults: {
+          model: { primary: 'x' },
+        },
+      },
+    });
+    expect(result).not.toHaveProperty('agents.defaults.tools');
+  });
+
+  test('new branch with tombstones only is treated as no-op', () => {
+    const result = deepMerge({}, { agents: { defaults: { tools: null } } });
+
+    expect(result).toEqual({});
+    expect(result).not.toHaveProperty('agents');
+  });
+
+  test('array replacement preserves nested null fields verbatim', () => {
+    const result = deepMerge(
+      {},
+      {
+        arr: [
+          { keep: 1, maybeNull: null },
+          { maybeUndefined: undefined, ok: 2 },
+        ],
+      }
+    );
+
+    expect(result).toEqual({
+      arr: [
+        { keep: 1, maybeNull: null },
+        { maybeUndefined: undefined, ok: 2 },
+      ],
+    });
+  });
+
   test('boolean false is treated as valid override (not deleted)', () => {
     const result = deepMerge({ enabled: true }, { enabled: false });
 

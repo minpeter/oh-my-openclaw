@@ -110,7 +110,43 @@ describe('integration workflow and edge cases', () => {
     const agents = createdConfig.agents as Record<string, unknown>;
     const list = agents.list as Record<string, unknown>[];
     const identity = list[0].identity as Record<string, unknown>;
+    const defaults = agents.defaults as Record<string, unknown>;
     expect(identity.name).toBe('Apex');
+    expect(createdConfig).not.toHaveProperty('routing');
+    expect(defaults).not.toHaveProperty('tools');
+    expect(createdConfig).toHaveProperty(
+      'tools.message.crossContext.allowAcrossProviders',
+      true
+    );
+  });
+
+  test('apply apex removes legacy unsupported routing and defaults.tools keys', async () => {
+    await writeJson5File(configPath, {
+      agents: {
+        defaults: {
+          tools: {
+            message: {
+              crossContext: {
+                allowAcrossProviders: true,
+              },
+            },
+          },
+        },
+      },
+      routing: {
+        defaultModel: 'anthropic/claude-sonnet-4-6',
+      },
+    });
+
+    await applyCommand('apex', { noBackup: true });
+
+    const updatedConfig = await readJson5File(configPath);
+    expect(updatedConfig).not.toHaveProperty('routing');
+    expect(updatedConfig).not.toHaveProperty('agents.defaults.tools');
+    expect(updatedConfig).toHaveProperty(
+      'tools.message.crossContext.allowAcrossProviders',
+      true
+    );
   });
 
   test('export from empty workspace stores empty workspaceFiles list', async () => {

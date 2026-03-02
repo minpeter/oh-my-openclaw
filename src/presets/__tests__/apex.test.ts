@@ -76,6 +76,20 @@ describe('apex preset', () => {
     expect(preset.config).toHaveProperty('tools');
   });
 
+  test('avoids unsupported OpenClaw schema keys', async () => {
+    const preset = await loadPreset(path.join(__dirname, '..', 'apex'));
+    const config = preset.config as Record<string, unknown>;
+    const agents = config.agents as Record<string, unknown>;
+    const defaults = agents.defaults as Record<string, unknown>;
+
+    expect(config).toHaveProperty('routing', null);
+    expect(defaults).toHaveProperty('tools', null);
+    expect(config).toHaveProperty(
+      'tools.message.crossContext.allowAcrossProviders',
+      true
+    );
+  });
+
   test('does not include restricted sensitive keys', async () => {
     const preset = await loadPreset(path.join(__dirname, '..', 'apex'));
     const keyPaths = collectKeyPaths(preset.config);

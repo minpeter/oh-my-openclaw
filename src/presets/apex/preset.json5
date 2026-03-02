@@ -25,17 +25,17 @@
             },
           },
         },
-        tools: {
-          message: {
-            crossContext: {
-              allowAcrossProviders: true,
-              marker: { enabled: true, prefix: '[from {channel}] ' },
-            },
-          },
-        },
+        // Remove legacy unsupported key if it exists in current user config.
+        tools: null,
       },
     },
     tools: {
+      message: {
+        crossContext: {
+          allowAcrossProviders: true,
+          marker: { enabled: true, prefix: '[from {channel}] ' },
+        },
+      },
       allow: [
         'exec',
         'process',
@@ -57,30 +57,15 @@
     channels: {
       discord: {
         allowBots: true,
+        guilds: {
+          '*': {
+            requireMention: true,
+          },
+        },
       },
     },
-    // Model routing: select model based on task type.
-    // Coding/development tasks get the strongest model;
-    // casual conversation and simple queries use a faster, lighter model.
-    routing: {
-      defaultModel: 'anthropic/claude-sonnet-4-6',
-      rules: [
-        {
-          name: 'coding',
-          description: 'Code generation, debugging, refactoring, and development tasks',
-          triggers: [
-            'tmux-opencode',
-            'code',
-            'development',
-            'debugging',
-            'refactoring',
-            'architecture',
-            'code-review',
-          ],
-          model: 'anthropic/claude-opus-4-6',
-        },
-      ],
-    },
+    // Remove legacy unsupported root key if it exists in current user config.
+    routing: null,
   },
   workspaceFiles: ['AGENTS.md', 'SOUL.md', 'USER.md', 'IDENTITY.md'],
   skills: ['prompt-guard', 'tmux-opencode', 'agent-browser', 'image-gen'],
