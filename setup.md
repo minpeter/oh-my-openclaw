@@ -96,33 +96,60 @@ Then ask the user to paste the token (free-text input).
 
 ---
 
-## Step 2 — Install Openclaw
+## Step 2 — Install Openclaw CLI and oh-my-openclaw
 
-`openclaw` is published to npm — no git clone or build required:
+> **IMPORTANT:** The `openclaw` CLI and `oh-my-openclaw` are **separate** npm packages.
+> - `openclaw` — the main CLI tool (provides the `openclaw` command)
+> - `oh-my-openclaw` — the preset manager (provides the `apex` command)
+>
+> You must install **both**. Installing only `oh-my-openclaw` will NOT give you the `openclaw` command.
 
 ```bash
-npm install -g oh-my-openclaw
-openclaw --help
+npm install -g openclaw oh-my-openclaw
+openclaw --version
+apex --version
 ```
+
+Verify that both commands are available before proceeding.
 
 ---
 
-## Step 3 — Apply the oh-my-openclaw preset
+## Step 3 — Apply the apex preset
+
+> **IMPORTANT:** The command is `apex apply apex`, NOT `openclaw presets apply oh-my-openclaw`.
+> OpenClaw does **not** have a built-in `presets` subcommand. The `apex` CLI (provided by `oh-my-openclaw`) is the preset manager.
 
 ```bash
-openclaw presets apply oh-my-openclaw
+apex apply apex
 ```
 
-Notes:
-- `oh-my-openclaw` is the default community preset installed via npm. The `apply` subcommand reads and applies its configuration.
-- Legacy config keys (e.g., top-level `identity`) are automatically migrated during apply — no manual `doctor --fix` needed afterward.
+- `apex` is the built-in power preset bundled with `oh-my-openclaw`.
+- Legacy config keys (e.g., top-level `identity`) are automatically migrated during apply.
 - If you see `Legacy key migration: identity → agents.list[].identity` in the output, that is normal and expected.
 
 ---
 
-## Step 4 — Register messenger channel(s)
+## Step 4 — Fix config validation errors
 
-Enable and register each channel. If a command is blocked by config validation errors, run `openclaw doctor --fix` and retry.
+> **IMPORTANT:** The apex preset may write config keys that the current OpenClaw version treats as unknown (e.g., `agents.defaults.tools`, `routing`). These invalid keys will **block** subsequent commands like `openclaw plugins enable`. You **must** run `doctor --fix` before proceeding.
+
+```bash
+openclaw doctor --fix --yes
+```
+
+This command will:
+- Remove unrecognized config keys
+- Tighten file/directory permissions (`~/.openclaw` → 700, config → 600)
+- Create missing directories (e.g., session store)
+- Install the gateway LaunchAgent if not present
+
+Do not skip this step — channel registration will fail without it.
+
+---
+
+## Step 5 — Register messenger channel(s)
+
+Enable and register each channel.
 
 ### Telegram
 ```bash
@@ -149,9 +176,9 @@ Skip this step. The user can add a channel later with `openclaw channels add`.
 
 ---
 
-## Step 5 — Configure the AI provider
+## Step 6 — Configure the AI provider
 
-openclaw reads API keys from standard environment variables automatically — no extra config needed if the key is already set.
+OpenClaw reads API keys from standard environment variables automatically — no extra config needed if the key is already set.
 
 If you run OpenClaw via a LaunchAgent/service, shell env vars may not be inherited. Persist the key once in the agent auth store:
 
@@ -163,7 +190,7 @@ openclaw gateway restart
 
 Use `--provider openai` or `--provider openrouter` when those are your primary providers.
 
-| Provider | Env var read automatically | Default model set by oh-my-openclaw preset |
+| Provider | Env var read automatically | Default model set by apex preset |
 |----------|---------------------------|----------------------------------|
 | Anthropic | `ANTHROPIC_API_KEY` | `anthropic/claude-opus-4-6` ✓ |
 | OpenAI | `OPENAI_API_KEY` | change with config set below |
@@ -178,34 +205,35 @@ openclaw config set agents.defaults.model.primary openai/gpt-4o
 
 ---
 
-## Step 6 — Set gateway mode and start
+## Step 7 — Set gateway mode, fix Node path, and start
+
+### 7-A. Set gateway mode
 
 ```bash
 openclaw config set gateway.mode local
+```
+
+### 7-B. Fix Node version manager path (always do this)
+
+> **IMPORTANT:** If the user has **any** Node version manager installed (nvm, fnm, volta, etc.), the gateway LaunchAgent plist will point to a version-managed Node binary (e.g., `~/.nvm/versions/node/v22.x.x/bin/node`). This **will** break when the managed Node version changes or is removed.
+>
+> **Always** run the repair step proactively — do not wait for a breakage or treat this as optional. Most developers use a version manager, so this is the common case, not the exception.
+
+```bash
+brew install node                          # ensures /opt/homebrew/bin/node exists
+openclaw gateway install --force           # (re)install the LaunchAgent
+openclaw doctor --repair --force --yes     # rewrites plist to use /opt/homebrew/bin/node
+```
+
+### 7-C. Start the gateway and verify
+
+```bash
 openclaw gateway run --force
 ```
 
 Use `--force` so that any already-running gateway process is killed and restarted cleanly.
 
-If `openclaw gateway restart` says `Gateway service not loaded`, install and start the service once:
-
-```bash
-openclaw gateway install
-openclaw gateway start
-```
-
-### Node version manager warning
-
-If the gateway service was installed while a Node version manager (nvm, fnm, volta, etc.) was active,
-the LaunchAgent plist may point to a version-managed Node binary that can break on upgrades.
-Fix this by installing system Node and repairing the service:
-
-```bash
-brew install node                          # /opt/homebrew/bin/node
-openclaw doctor --repair --force --yes     # rewrites plist to use system Node
-```
-
-Wait until you see both channel lines in the log output:
+Wait until you see channel lines in the log output:
 ```
 [telegram] [default] starting provider (@<botname>)
 [discord]  [default] starting provider (@<botname>)
@@ -217,11 +245,11 @@ openclaw health
 openclaw gateway status   # confirm Node path is /opt/homebrew/bin/node
 ```
 
-Expected output: both channels show `ok`, and the gateway command shows system Node.
+Expected output: all channels show `ok`, and `gateway status` shows system Node (`/opt/homebrew/bin/node`).
 
 ---
 
-## Step 7 — Handle pairing codes automatically
+## Step 8 — Handle pairing codes automatically
 
 When the user first messages the bot, they will receive a pairing prompt like:
 
@@ -243,7 +271,7 @@ openclaw pairing approve discord <CODE>
 
 ---
 
-## Step 8 — Error recovery
+## Step 9 — Error recovery
 
 If any command fails:
 1. Read the error message carefully.
@@ -253,15 +281,17 @@ If any command fails:
 
 | Error | Fix |
 |-------|-----|
+| `command not found: openclaw` | `npm install -g openclaw` (separate from `oh-my-openclaw`) |
+| `command not found: apex` | `npm install -g oh-my-openclaw` (provides the `apex` command) |
+| `unknown command 'presets'` | Use `apex apply apex` instead — OpenClaw has no `presets` subcommand |
 | `Unknown channel: telegram` | `openclaw plugins enable telegram` first |
 | `Unknown channel: discord` | `openclaw plugins enable discord` first |
-| `Preset not found` | `openclaw presets apply oh-my-openclaw` (ensure `oh-my-openclaw` is installed via npm) |
-| `Invalid config` / migration warnings | `openclaw doctor --fix` |
+| `Invalid config` / `Unrecognized key` | `openclaw doctor --fix --yes` — the apex preset may write keys the CLI doesn't recognize yet |
+| `plugins enable` blocked by config errors | Run `openclaw doctor --fix --yes` first, then retry |
 | `gateway.mode is unset` | `openclaw config set gateway.mode local` |
 | `gateway run` fails (port in use) | `openclaw gateway run --force` |
 | `Gateway service not loaded` | `openclaw gateway install` then `openclaw gateway start` |
 | `No API key found for provider "anthropic"` | `openclaw models auth paste-token --provider anthropic` then `openclaw gateway restart` |
-| `plugins enable` blocked by config errors | Run `openclaw doctor --fix` first, then retry |
 | Server/group messages silently ignored | `openclaw config set channels.<name>.groupPolicy open` |
 | Node version manager warning in gateway | `brew install node` then `openclaw doctor --repair --force --yes` |
 | Bot-to-bot messages not working (Discord) | Ensure `channels.discord.allowBots: true` is in your preset config |
@@ -273,19 +303,23 @@ If any command fails:
 If the gateway is completely broken or you want to start fresh:
 
 ```bash
-# 1. Apply oh-my-openclaw preset (auto-migrates legacy keys)
-openclaw presets apply oh-my-openclaw
+# 1. Ensure both packages are installed
+npm install -g openclaw oh-my-openclaw
 
-# 2. Fix any remaining config issues
+# 2. Apply apex preset (auto-migrates legacy keys)
+apex apply apex
+
+# 3. Fix any config validation errors
 openclaw doctor --fix --yes
 
-# 3. Ensure system Node and restart gateway
+# 4. Ensure system Node and repair gateway service
 brew install node
 openclaw gateway install --force
 openclaw doctor --repair --force --yes
 
-# 4. Wait for gateway to start, then verify
-sleep 15
+# 5. Start gateway and verify
+openclaw gateway run --force
+# Wait for channel startup logs, then:
 openclaw health
 openclaw gateway status
 ```
