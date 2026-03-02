@@ -8,6 +8,7 @@ import { applyCommand } from './commands/apply';
 import { diffCommand } from './commands/diff';
 import { exportCommand } from './commands/export';
 import { listCommand } from './commands/list';
+import { restoreCommand } from './commands/restore';
 import { uploadCommand } from './commands/upload';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -166,6 +167,25 @@ program
       }
     }
   );
+
+program
+  .command('restore')
+  .description('Restore OpenClaw configuration from a backup')
+  .option('--list', 'List available backups sorted by date')
+  .option('--backup <name>', 'Restore a specific backup by filename')
+  .action(async (options: { list?: boolean; backup?: string }) => {
+    try {
+      await restoreCommand({
+        list: options.list,
+        backup: options.backup,
+      });
+    } catch (err) {
+      console.error(
+        `Error: ${err instanceof Error ? err.message : String(err)}`
+      );
+      process.exit(1);
+    }
+  });
 
 program
   .command('upload')
