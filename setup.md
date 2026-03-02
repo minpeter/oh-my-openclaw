@@ -96,41 +96,34 @@ Then ask the user to paste the token (free-text input).
 
 ---
 
-## Step 2 — Install Openclaw CLI and oh-my-openclaw
+## Step 2 — Install Openclaw CLI
 
-> **IMPORTANT:** The `openclaw` CLI and `oh-my-openclaw` are **separate** packages.
-> - `openclaw` — the main CLI tool (provides the `openclaw` command)
-> - `oh-my-openclaw` — the preset manager (provides the `apex` command)
->
-> You must install **both**. Installing only `oh-my-openclaw` will NOT give you the `openclaw` command.
+> **IMPORTANT:** `openclaw` and `oh-my-openclaw` are **separate** packages with different install strategies:
+> - `openclaw` — the main CLI. Install **globally**.
+> - `oh-my-openclaw` — the preset manager. **Never** install globally. Always run via `bunx oh-my-openclaw@latest` to ensure you get the latest version.
 
-**Preferred (bun):**
+Install the OpenClaw CLI globally:
 ```bash
-bun add -g openclaw oh-my-openclaw
-```
-
-If `bun` is not installed, bootstrap it first with `bunx bun` or install via `curl -fsSL https://bun.sh/install | bash`.
-
-**Fallback (npm):**
-```bash
-npm install -g openclaw oh-my-openclaw
-```
-
-Verify both commands are available:
-```bash
+npm install -g openclaw
 openclaw --version
-apex --version
 ```
+
+`oh-my-openclaw` does not need installation — it is always executed on-demand via `bunx`:
+```bash
+bunx oh-my-openclaw@latest --version
+```
+
+If `bunx` is not available, install bun first: `curl -fsSL https://bun.sh/install | bash`.
 
 ---
 
 ## Step 3 — Apply the apex preset
 
-> **IMPORTANT:** The command is `apex apply apex`, NOT `openclaw presets apply oh-my-openclaw`.
-> OpenClaw does **not** have a built-in `presets` subcommand. The `apex` CLI (provided by `oh-my-openclaw`) is the preset manager.
+> **IMPORTANT:** The command is `bunx oh-my-openclaw@latest apply apex`, NOT `openclaw presets apply oh-my-openclaw`.
+> OpenClaw does **not** have a built-in `presets` subcommand. The preset manager is provided by `oh-my-openclaw` and must be run via `bunx`.
 
 ```bash
-apex apply apex
+bunx oh-my-openclaw@latest apply apex
 ```
 
 - `apex` is the built-in power preset bundled with `oh-my-openclaw`.
@@ -291,9 +284,8 @@ If any command fails:
 
 | Error | Fix |
 |-------|-----|
-| `command not found: openclaw` | `bun add -g openclaw` (separate from `oh-my-openclaw`). Fallback: `npm install -g openclaw` |
-| `command not found: apex` | `bun add -g oh-my-openclaw` (provides the `apex` command). Fallback: `npm install -g oh-my-openclaw` |
-| `unknown command 'presets'` | Use `apex apply apex` instead — OpenClaw has no `presets` subcommand |
+| `command not found: openclaw` | `npm install -g openclaw` (separate from `oh-my-openclaw`) |
+| `unknown command 'presets'` | Use `bunx oh-my-openclaw@latest apply apex` — OpenClaw has no `presets` subcommand |
 | `Unknown channel: telegram` | `openclaw plugins enable telegram` first |
 | `Unknown channel: discord` | `openclaw plugins enable discord` first |
 | `Invalid config` / `Unrecognized key` | `openclaw doctor --fix --yes` — the apex preset may write keys the CLI doesn't recognize yet |
@@ -313,11 +305,11 @@ If any command fails:
 If the gateway is completely broken or you want to start fresh:
 
 ```bash
-# 1. Ensure both packages are installed (prefer bun, fallback: npm install -g)
-bun add -g openclaw oh-my-openclaw
+# 1. Ensure openclaw CLI is installed globally
+npm install -g openclaw
 
-# 2. Apply apex preset (auto-migrates legacy keys)
-apex apply apex
+# 2. Apply apex preset via bunx (auto-migrates legacy keys)
+bunx oh-my-openclaw@latest apply apex
 
 # 3. Fix any config validation errors
 openclaw doctor --fix --yes
