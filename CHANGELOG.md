@@ -1,5 +1,12 @@
 # oh-my-openclaw
 
+## 1.1.3
+
+### Patch Changes
+
+- e02885f: Remove proactive wake/back-online acknowledgements after gateway restart in the apex preset. The agent now recovers context silently and waits for explicit user input when no pending work exists.
+- e02885f: Improve apex preset compatibility with strict OpenClaw schema validation by removing unsupported `routing` and `agents.defaults.tools` keys during apply. This also hardens deep merge behavior so null tombstones are stripped from newly added nested branches.
+
 ## 1.1.2
 
 ### Patch Changes
