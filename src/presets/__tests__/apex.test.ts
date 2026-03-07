@@ -63,8 +63,19 @@ describe('apex preset', () => {
       'prompt-guard',
       'tmux-opencode',
       'agent-browser',
-      'image-gen',
     ]);
+  });
+
+  test('includes required OpenClaw plugins', async () => {
+    const preset = await loadPreset(path.join(__dirname, '..', 'apex'));
+
+    expect(preset.openclawPlugins).toEqual(['openclaw-memory-auto-recall']);
+  });
+
+  test('includes required OpenClaw bootstrap steps', async () => {
+    const preset = await loadPreset(path.join(__dirname, '..', 'apex'));
+
+    expect(preset.openclawBootstrap).toEqual({ memoryIndex: true });
   });
 
   test('includes required config sections', async () => {
@@ -74,6 +85,41 @@ describe('apex preset', () => {
     expect(preset.config).toHaveProperty('identity');
     expect(preset.config).toHaveProperty('agents');
     expect(preset.config).toHaveProperty('tools');
+    expect(preset.config).toHaveProperty('plugins.allow', [
+      'memory-core',
+      'memory-auto-recall',
+    ]);
+    expect(preset.config).toHaveProperty('plugins.entries.memory-auto-recall');
+  });
+
+  test('enables mention-based replies in any Telegram group by default', async () => {
+    const preset = await loadPreset(path.join(__dirname, '..', 'apex'));
+
+    expect(preset.config).toHaveProperty(
+      'channels.telegram.groupPolicy',
+      'open'
+    );
+    expect(preset.config).toHaveProperty(
+      'channels.telegram.groups.*.requireMention',
+      true
+    );
+  });
+
+  test('enables memory auto recall with safe defaults', async () => {
+    const preset = await loadPreset(path.join(__dirname, '..', 'apex'));
+
+    expect(preset.config).toHaveProperty(
+      'plugins.entries.memory-auto-recall.enabled',
+      true
+    );
+    expect(preset.config).toHaveProperty(
+      'plugins.entries.memory-auto-recall.config',
+      {
+        maxResults: 3,
+        minScore: 0.3,
+        minPromptLength: 10,
+      }
+    );
   });
 
   test('avoids unsupported OpenClaw schema keys', async () => {
