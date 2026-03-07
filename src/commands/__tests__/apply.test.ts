@@ -1,9 +1,9 @@
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import JSON5 from 'json5';
-
+import { setOpenClawCommandExecutorForTests } from '../../core/openclaw-plugin';
 import { applyCommand } from '../apply';
 
 interface TempEnv {
@@ -100,12 +100,21 @@ async function captureLogs(run: () => Promise<void>): Promise<string[]> {
 }
 
 afterEach(async () => {
+  setOpenClawCommandExecutorForTests();
   process.env = { ...originalEnv };
   await Promise.all(
     tempDirs.splice(0).map(async (tempDir) => {
       await fs.rm(tempDir, { recursive: true, force: true });
     })
   );
+});
+
+beforeEach(() => {
+  setOpenClawCommandExecutorForTests(async () => ({
+    exitCode: 0,
+    stderr: '',
+    stdout: '',
+  }));
 });
 
 describe('applyCommand', () => {
@@ -242,6 +251,7 @@ describe('applyCommand', () => {
       name: 'dry-run-preset',
       description: 'Dry run preset',
       version: '1.0.0',
+      openclawPlugins: ['openclaw-memory-auto-recall'],
       config: {
         identity: { name: 'DryRunUpdated' },
       },
@@ -265,7 +275,195 @@ describe('applyCommand', () => {
     expect(combined).toContain('DRY RUN');
     expect(combined).toContain('dry-run-preset');
     expect(combined).toContain('Dry-run note: detected JSON5 comments');
+    expect(combined).toContain(
+      'OpenClaw plugins to install: openclaw-memory-auto-recall'
+    );
     expect(combined).toContain('remove those comments');
+  });
+
+  test('installs declared OpenClaw plugins before writing config', async () => {
+    const env = await createTempEnv('openclaw-apply-plugin-install-');
+    const commands: string[][] = [];
+
+    setOpenClawCommandExecutorForTests(async (command) => {
+      commands.push(command);
+      if (
+        command.join(' ') ===
+        'openclaw plugins install openclaw-memory-auto-recall'
+      ) {
+        await writeConfig(env.configPath, {
+          plugins: {
+            installs: {
+              'memory-auto-recall': {
+                source: 'npm',
+                spec: 'openclaw-memory-auto-recall',
+                installPath: '/tmp/extensions/memory-auto-recall',
+              },
+            },
+          },
+        });
+      }
+
+      return {
+        exitCode: 0,
+        stderr: '',
+        stdout: 'installed',
+      };
+    });
+
+    await writeConfig(env.configPath, { identity: { name: 'PluginBase' } });
+    await writeUserPreset(env.presetsDir, 'plugin-preset', {
+      name: 'plugin-preset',
+      description: 'Plugin install preset',
+      version: '1.0.0',
+      openclawBootstrap: { memoryIndex: true },
+      openclawPlugins: ['openclaw-memory-auto-recall'],
+      config: {
+        identity: { name: 'PluginEnabled' },
+      },
+    });
+
+    const logs = await captureLogs(async () => {
+      await applyCommand('plugin-preset', { noBackup: true });
+    });
+
+    expect(commands).toEqual([
+      ['openclaw', 'plugins', 'install', 'openclaw-memory-auto-recall'],
+      ['openclaw', 'memory', 'index'],
+    ]);
+    expect(logs.join('\n')).toContain(
+      'OK OpenClaw plugins ready: openclaw-memory-auto-recall'
+    );
+    expect(logs.join('\n')).toContain('OK OpenClaw memory indexed.');
+
+    const updated = await readConfig(env.configPath);
+    expect(updated).toHaveProperty(
+      'plugins.installs.memory-auto-recall.spec',
+      'openclaw-memory-auto-recall'
+    );
+    expect(
+      (
+        (
+          (updated.agents as Record<string, unknown>).list as Record<
+            string,
+            unknown
+          >[]
+        )[0].identity as Record<string, unknown>
+      ).name
+    ).toBe('PluginEnabled');
+  });
+
+  test('clean apply preserves plugin install state after cleanup', async () => {
+    const env = await createTempEnv('openclaw-apply-plugin-clean-');
+    const commands: string[][] = [];
+
+    setOpenClawCommandExecutorForTests(async (command) => {
+      commands.push(command);
+      if (
+        command.join(' ') ===
+        'openclaw plugins install openclaw-memory-auto-recall'
+      ) {
+        await writeConfig(env.configPath, {
+          plugins: {
+            installs: {
+              'memory-auto-recall': {
+                source: 'npm',
+                spec: 'openclaw-memory-auto-recall',
+                installPath: '/tmp/extensions/memory-auto-recall',
+              },
+            },
+          },
+        });
+      }
+
+      return {
+        exitCode: 0,
+        stderr: '',
+        stdout: 'installed',
+      };
+    });
+
+    await writeConfig(env.configPath, { identity: { name: 'BeforeClean' } });
+    await writeUserPreset(env.presetsDir, 'plugin-clean-preset', {
+      name: 'plugin-clean-preset',
+      description: 'Plugin clean preset',
+      version: '1.0.0',
+      openclawBootstrap: { memoryIndex: true },
+      openclawPlugins: ['openclaw-memory-auto-recall'],
+      config: {
+        identity: { name: 'AfterClean' },
+      },
+    });
+
+    await applyCommand('plugin-clean-preset', {
+      clean: true,
+      noBackup: true,
+    });
+
+    expect(commands).toEqual([
+      ['openclaw', 'plugins', 'install', 'openclaw-memory-auto-recall'],
+      ['openclaw', 'memory', 'index'],
+    ]);
+
+    const updated = await readConfig(env.configPath);
+    expect(updated).toHaveProperty(
+      'plugins.installs.memory-auto-recall.spec',
+      'openclaw-memory-auto-recall'
+    );
+    expect(
+      (
+        (
+          (updated.agents as Record<string, unknown>).list as Record<
+            string,
+            unknown
+          >[]
+        )[0].identity as Record<string, unknown>
+      ).name
+    ).toBe('AfterClean');
+  });
+
+  test('plugin install failure aborts apply before config changes', async () => {
+    const env = await createTempEnv('openclaw-apply-plugin-fail-');
+    const beforeConfig = { identity: { name: 'PluginBase' } };
+
+    setOpenClawCommandExecutorForTests(async () => ({
+      exitCode: 1,
+      stderr: 'registry unavailable',
+      stdout: '',
+    }));
+
+    await writeConfig(env.configPath, beforeConfig);
+    await writeUserPreset(env.presetsDir, 'plugin-fail-preset', {
+      name: 'plugin-fail-preset',
+      description: 'Plugin failure preset',
+      version: '1.0.0',
+      openclawBootstrap: { memoryIndex: true },
+      openclawPlugins: ['openclaw-memory-auto-recall'],
+      config: {
+        identity: { name: 'ShouldNotApply' },
+      },
+      workspaceFiles: ['AGENTS.md'],
+    });
+
+    await expect(applyCommand('plugin-fail-preset')).rejects.toThrow(
+      "Failed to install OpenClaw plugin 'openclaw-memory-auto-recall': registry unavailable"
+    );
+
+    expect(await readConfig(env.configPath)).toEqual(beforeConfig);
+    expect(await fileExists(path.join(env.workspaceDir, 'AGENTS.md'))).toBe(
+      false
+    );
+
+    const backupEntries = await fs.readdir(env.backupsDir);
+    const configBackups = backupEntries.filter((entry) =>
+      entry.endsWith('.bak')
+    );
+    expect(configBackups).toHaveLength(1);
+
+    const backupConfig = JSON5.parse(
+      await fs.readFile(path.join(env.backupsDir, configBackups[0]), 'utf-8')
+    ) as Record<string, unknown>;
+    expect(backupConfig).toEqual(beforeConfig);
   });
 
   test('warns when apply rewrites existing JSON5 comments', async () => {

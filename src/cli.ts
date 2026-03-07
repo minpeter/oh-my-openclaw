@@ -1,9 +1,7 @@
 #!/usr/bin/env bun
 
-import { createRequire } from 'node:module';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { Command } from 'commander';
+import packageJson from '../package.json';
 import { applyCommand } from './commands/apply';
 import { diffCommand } from './commands/diff';
 import { exportCommand } from './commands/export';
@@ -11,18 +9,12 @@ import { listCommand } from './commands/list';
 import { restoreCommand } from './commands/restore';
 import { uploadCommand } from './commands/upload';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const require = createRequire(import.meta.url);
-const pkg = require(join(__dirname, '..', 'package.json')) as {
-  version: string;
-};
-
 const program = new Command();
 
 program
   .name('apex')
   .description('OpenClaw configuration preset manager')
-  .version(pkg.version);
+  .version(packageJson.version);
 
 program
   .command('list')

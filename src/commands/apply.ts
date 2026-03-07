@@ -16,6 +16,10 @@ import {
 } from '../core/json5-utils';
 import { migrateLegacyKeys } from '../core/legacy-migration';
 import { deepMerge } from '../core/merge';
+import {
+  installOpenClawPlugins,
+  runOpenClawMemoryIndex,
+} from '../core/openclaw-plugin';
 import { loadPreset } from '../core/preset-loader';
 import { assertValidPresetName } from '../core/preset-name';
 import { cloneToCache, isGitHubRef, parseGitHubRef } from '../core/remote';
@@ -55,6 +59,14 @@ function resolveBuiltinPresetDir(presetName: string): string {
 
 function hasPresetConfig(preset: PresetManifest): boolean {
   return Boolean(preset.config && Object.keys(preset.config).length > 0);
+}
+
+function hasPresetOpenClawPlugins(preset: PresetManifest): boolean {
+  return Boolean(preset.openclawPlugins && preset.openclawPlugins.length > 0);
+}
+
+function hasOpenClawMemoryBootstrap(preset: PresetManifest): boolean {
+  return preset.openclawBootstrap?.memoryIndex === true;
 }
 
 function logVerbose(enabled: boolean, message: string): void {
@@ -367,10 +379,51 @@ function printDryRunInfo(
   if (preset.workspaceFiles?.length) {
     console.log(`Workspace files: ${preset.workspaceFiles.join(', ')}`);
   }
+  if (preset.openclawPlugins?.length) {
+    console.log(
+      `OpenClaw plugins to install: ${preset.openclawPlugins.join(', ')}`
+    );
+  }
+  if (hasOpenClawMemoryBootstrap(preset)) {
+    console.log('OpenClaw bootstrap steps: memory index');
+  }
   if (preset.skills?.length) {
     console.log(`Skills to install: ${preset.skills.join(', ')}`);
   }
   console.log(pc.dim('\nRun without --dry-run to apply.'));
+}
+
+async function ensurePresetOpenClawPlugins(
+  preset: PresetManifest,
+  verbose: boolean
+): Promise<void> {
+  if (hasPresetOpenClawPlugins(preset)) {
+    logVerbose(
+      verbose,
+      `Ensuring ${preset.openclawPlugins?.length ?? 0} OpenClaw plugin(s)`
+    );
+    const ensuredPlugins = await installOpenClawPlugins(
+      preset.openclawPlugins ?? []
+    );
+    if (ensuredPlugins.length > 0) {
+      console.log(
+        pc.green(`OK OpenClaw plugins ready: ${ensuredPlugins.join(', ')}`)
+      );
+    }
+  }
+}
+
+async function runPostApplyOpenClawBootstrap(
+  preset: PresetManifest,
+  verbose: boolean
+): Promise<void> {
+  if (!hasOpenClawMemoryBootstrap(preset)) {
+    return;
+  }
+
+  logVerbose(verbose, 'Running OpenClaw memory index bootstrap');
+  await runOpenClawMemoryIndex();
+  console.log(pc.green('OK OpenClaw memory indexed.'));
 }
 
 export async function applyCommand(
@@ -395,12 +448,33 @@ export async function applyCommand(
   const configSnapshot = await loadCurrentConfig(paths.configPath);
   let currentConfig = configSnapshot.config;
   let configExists = configSnapshot.exists;
-  const configHasJson5Comments = configSnapshot.hasJson5Comments;
+  let configHasJson5Comments = configSnapshot.hasJson5Comments;
   const workspaceDir = resolveWorkspaceDir(currentConfig, paths.stateDir);
   logVerbose(verbose, describeConfigStatus(configExists, paths.configPath));
   logVerbose(verbose, `Workspace directory resolved to ${workspaceDir}`);
 
-  if (options.clean && !options.dryRun) {
+  if (options.dryRun) {
+    const { mergedConfig } = buildMergedConfig(
+      options.clean ? {} : currentConfig,
+      preset
+    );
+    logVerbose(
+      verbose,
+      `Merge complete: ${Object.keys(mergedConfig).length} top-level keys`
+    );
+    logVerbose(verbose, 'Dry-run requested; skipping backup and write steps');
+    if (options.clean) {
+      console.log(pc.yellow('Mode: CLEAN INSTALL'));
+    }
+    printDryRunInfo(preset, {
+      configExists,
+      configHasJson5Comments,
+      configPath: paths.configPath,
+    });
+    return;
+  }
+
+  if (options.clean) {
     logVerbose(
       verbose,
       `Running clean mode with backup ${getBackupMode(options.noBackup)}`
@@ -412,14 +486,33 @@ export async function applyCommand(
       configExists,
       Boolean(options.noBackup)
     );
-
-    currentConfig = {};
-    configExists = false;
     logVerbose(verbose, 'Clean mode completed');
     console.log(
       pc.yellow('Clean install: existing config and workspace files removed.')
     );
   }
+
+  if (!options.clean) {
+    logVerbose(
+      verbose,
+      `Running regular backup mode with backup ${getBackupMode(options.noBackup)}`
+    );
+    await runRegularBackupMode(
+      workspaceDir,
+      paths.configPath,
+      paths.backupsDir,
+      configExists,
+      Boolean(options.noBackup),
+      Boolean(preset.workspaceFiles?.length)
+    );
+  }
+
+  await ensurePresetOpenClawPlugins(preset, verbose);
+
+  const postBootstrapSnapshot = await loadCurrentConfig(paths.configPath);
+  currentConfig = postBootstrapSnapshot.config;
+  configExists = postBootstrapSnapshot.exists;
+  configHasJson5Comments = postBootstrapSnapshot.hasJson5Comments;
 
   const { applied, mergedConfig, preserved } = buildMergedConfig(
     currentConfig,
@@ -435,34 +528,6 @@ export async function applyCommand(
   if (preserved.length > 0) {
     console.log(
       pc.dim(`Preserved existing user settings: ${preserved.join(', ')}`)
-    );
-  }
-
-  if (options.dryRun) {
-    logVerbose(verbose, 'Dry-run requested; skipping backup and write steps');
-    if (options.clean) {
-      console.log(pc.yellow('Mode: CLEAN INSTALL'));
-    }
-    printDryRunInfo(preset, {
-      configExists,
-      configHasJson5Comments,
-      configPath: paths.configPath,
-    });
-    return;
-  }
-
-  if (!options.clean) {
-    logVerbose(
-      verbose,
-      `Running regular backup mode with backup ${getBackupMode(options.noBackup)}`
-    );
-    await runRegularBackupMode(
-      workspaceDir,
-      paths.configPath,
-      paths.backupsDir,
-      configExists,
-      Boolean(options.noBackup),
-      Boolean(preset.workspaceFiles?.length)
     );
   }
 
@@ -512,6 +577,8 @@ export async function applyCommand(
       console.log(pc.green(`OK Skills installed: ${installed.join(', ')}`));
     }
   }
+
+  await runPostApplyOpenClawBootstrap(preset, verbose);
 
   if (process.platform === 'darwin') {
     logVerbose(verbose, 'Checking Node PATH fix for macOS');

@@ -23,8 +23,8 @@ https://raw.githubusercontent.com/minpeter/oh-my-openclaw/main/setup.md
 
 ### Basic Workflow
 1. **List** available presets: `oh-my-openclaw list`
-2. **Diff** a preset against your current config: `oh-my-openclaw diff oh-my-openclaw`
-3. **Apply** the preset: `oh-my-openclaw apply oh-my-openclaw`
+2. **Diff** a preset against your current config: `oh-my-openclaw diff apex`
+3. **Apply** the preset: `oh-my-openclaw apply apex`
 4. **Install** oh-my-openclaw quickly: `oh-my-openclaw install`
 5. **Export** your current setup as a new preset: `oh-my-openclaw export my-custom-setup`
 6. **Apply** a preset from GitHub: `oh-my-openclaw apply minpeter/demo-researcher`
@@ -40,13 +40,13 @@ oh-my-openclaw list
 ```
 Available presets:
 
-  oh-my-openclaw [builtin]
+  apex [builtin]
     All-in-one power assistant with full capabilities (all-in-one, power, assistant)
     v1.0.0
 ```
 
 ### apply
-Applies a preset to your OpenClaw configuration. It merges the preset's JSON config into your `openclaw.json`, copies any bundled workspace files (like `AGENTS.md`) to your `.openclaw` directory, and installs any bundled skills to `~/.agents/skills/`. The `<preset>` argument can be a local preset name, a GitHub shorthand (`owner/repo`), or a full GitHub URL (`https://github.com/owner/repo`).
+Applies a preset to your OpenClaw configuration. It merges the preset's JSON config into your `openclaw.json`, copies any bundled workspace files (like `AGENTS.md`) to your `.openclaw` directory, installs any bundled skills to `~/.agents/skills/`, and can bootstrap declared OpenClaw plugins. The `<preset>` argument can be a local preset name, a GitHub shorthand (`owner/repo`), or a full GitHub URL (`https://github.com/owner/repo`).
 ```bash
 oh-my-openclaw apply <preset> [options]
 ```
@@ -58,7 +58,7 @@ oh-my-openclaw apply <preset> [options]
   - `--force`: Re-download a remote preset even if it's already cached locally.
 
 ### install
-Installs the oh-my-openclaw preset (shortcut for `apply oh-my-openclaw`).
+Installs the `apex` preset (shortcut for `apply apex`).
 ```bash
 oh-my-openclaw install [options]
 ```
@@ -90,7 +90,7 @@ oh-my-openclaw diff <preset> [options]
 
 | Name | Description | Use Case |
 | :--- | :--- | :--- |
-| **oh-my-openclaw** | All-in-one power assistant with full capabilities | The single built-in preset with 100% of all capabilities. |
+| **apex** | All-in-one power assistant with full capabilities | The single built-in preset with 100% of all capabilities. |
 
 ## How It Works
 
@@ -177,6 +177,24 @@ If a skill already exists at the target location:
 ```
 
 Skills are stored in the preset's `skills/<name>/` directory and must contain a `SKILL.md` file.
+
+## OpenClaw Plugins in Presets
+
+Presets can also declare OpenClaw plugin packages that should be installed during `apply`. This is separate from `config.plugins.entries`, which only writes OpenClaw config.
+
+```json5
+{
+  name: "my-preset",
+  description: "My preset with plugin bootstrap",
+  version: "1.0.0",
+  openclawPlugins: ["openclaw-memory-auto-recall"],
+  openclawBootstrap: {
+    memoryIndex: true
+  }
+}
+```
+
+The built-in `apex` preset uses this to ensure `openclaw-memory-auto-recall` is installed and to run `openclaw memory index` during apply.
 
 ## Development
 - **Prerequisites:** Bun

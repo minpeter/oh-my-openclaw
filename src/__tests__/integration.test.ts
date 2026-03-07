@@ -11,6 +11,7 @@ import { exportCommand } from '../commands/export';
 import { listCommand } from '../commands/list';
 import { listBackups } from '../core/backup';
 import { resolveOpenClawPaths } from '../core/config-path';
+import { setOpenClawCommandExecutorForTests } from '../core/openclaw-plugin';
 import { loadPreset } from '../core/preset-loader';
 
 interface DiffJsonOutput {
@@ -26,6 +27,11 @@ describe('integration workflow and edge cases', () => {
 
   beforeEach(async () => {
     originalEnv = { ...process.env };
+    setOpenClawCommandExecutorForTests(async () => ({
+      exitCode: 0,
+      stderr: '',
+      stdout: '',
+    }));
 
     tempDir = await mkdtemp(join(tmpdir(), 'openclaw-integration-'));
     const stateDir = join(tempDir, '.openclaw');
@@ -37,6 +43,7 @@ describe('integration workflow and edge cases', () => {
   });
 
   afterEach(async () => {
+    setOpenClawCommandExecutorForTests();
     process.env = { ...originalEnv };
     await rm(tempDir, { recursive: true, force: true });
   });

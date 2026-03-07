@@ -11,9 +11,69 @@ function isSkippablePresetError(error: unknown): boolean {
 
   return (
     error.message.startsWith('Preset not found:') ||
+    error.message.startsWith('Preset invalid field:') ||
     error.message.startsWith('Preset missing required field:') ||
     error.message.startsWith('Invalid JSON5 in ')
   );
+}
+
+function throwInvalidField(
+  field: string,
+  manifestPath: string,
+  reason: string
+): never {
+  throw new Error(
+    `Preset invalid field: ${field} (${reason}) (in ${manifestPath})`
+  );
+}
+
+function validateStringArrayField(
+  field: string,
+  value: unknown,
+  manifestPath: string
+): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (!Array.isArray(value)) {
+    throwInvalidField(field, manifestPath, 'expected an array of strings');
+  }
+
+  for (const entry of value) {
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
+      throwInvalidField(
+        field,
+        manifestPath,
+        'array entries must be non-empty strings'
+      );
+    }
+  }
+}
+
+function validateOpenClawBootstrapField(
+  value: unknown,
+  manifestPath: string
+): void {
+  if (value === undefined) {
+    return;
+  }
+
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throwInvalidField('openclawBootstrap', manifestPath, 'expected an object');
+  }
+
+  const bootstrap = value as Record<string, unknown>;
+  if (
+    bootstrap.memoryIndex !== undefined &&
+    typeof bootstrap.memoryIndex !== 'boolean'
+  ) {
+    throwInvalidField(
+      'openclawBootstrap.memoryIndex',
+      manifestPath,
+      'expected a boolean'
+    );
+  }
 }
 
 // Reads preset.json5 from a preset directory, validates required fields
@@ -46,6 +106,13 @@ export async function loadPreset(presetPath: string): Promise<PresetManifest> {
       `Preset missing required field: version (in ${manifestPath})`
     );
   }
+
+  validateStringArrayField(
+    'openclawPlugins',
+    manifest.openclawPlugins,
+    manifestPath
+  );
+  validateOpenClawBootstrapField(manifest.openclawBootstrap, manifestPath);
 
   return manifest as PresetManifest;
 }

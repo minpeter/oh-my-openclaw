@@ -1,10 +1,14 @@
 {
   name: 'apex',
-  description: 'All-in-one power assistant preset with secure prompt-guard defaults',
+  description: 'All-in-one power assistant preset with secure prompt-guard and memory recall defaults',
   version: '1.0.0',
   author: 'apex',
-  tags: ['all-in-one', 'security', 'developer', 'assistant', 'tmux', 'prompt-guard', 'agent-browser'],
+  tags: ['all-in-one', 'security', 'developer', 'assistant', 'tmux', 'prompt-guard', 'agent-browser', 'memory', 'auto-recall'],
   builtin: true,
+  openclawBootstrap: {
+    memoryIndex: true,
+  },
+  openclawPlugins: ['openclaw-memory-auto-recall'],
   config: {
     identity: {
       name: 'Apex',
@@ -43,7 +47,7 @@
         'write',
         'edit',
         'apply_patch',
-        'browser',
+        // 'browser' — removed; use agent-browser CLI via exec instead
         'web_search',
         'web_fetch',
         'cron',
@@ -63,10 +67,31 @@
           },
         },
       },
+      telegram: {
+        groupPolicy: 'open',
+        groups: {
+          '*': {
+            requireMention: true,
+          },
+        },
+      },
+    },
+    plugins: {
+      allow: ['memory-core', 'memory-auto-recall'],
+      entries: {
+        'memory-auto-recall': {
+          enabled: true,
+          config: {
+            maxResults: 3,
+            minScore: 0.3,
+            minPromptLength: 10,
+          },
+        },
+      },
     },
     // Remove legacy unsupported root key if it exists in current user config.
     routing: null,
   },
   workspaceFiles: ['AGENTS.md', 'SOUL.md', 'USER.md', 'IDENTITY.md'],
-  skills: ['prompt-guard', 'tmux-opencode', 'agent-browser', 'image-gen'],
+  skills: ['prompt-guard', 'tmux-opencode', 'agent-browser'],
 }

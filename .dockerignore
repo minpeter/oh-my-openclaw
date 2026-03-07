@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.github
+.sisyphus
+.env*
+*.tgz
+*.bak
+coverage
+.cache
+.idea
+.DS_Store

@@ -115,6 +115,8 @@ describe('loadPreset', () => {
       description: 'Full preset with all fields',
       version: '2.0.0',
       author: 'Test Author',
+      openclawBootstrap: { memoryIndex: true },
+      openclawPlugins: ['openclaw-memory-auto-recall'],
       tags: ['tag1', 'tag2'],
       builtin: false,
     });
@@ -122,8 +124,40 @@ describe('loadPreset', () => {
     const manifest = await loadPreset(presetDir);
 
     expect(manifest.author).toBe('Test Author');
+    expect(manifest.openclawBootstrap).toEqual({ memoryIndex: true });
+    expect(manifest.openclawPlugins).toEqual(['openclaw-memory-auto-recall']);
     expect(manifest.tags).toEqual(['tag1', 'tag2']);
     expect(manifest.builtin).toBe(false);
+  });
+
+  test('throws when openclawPlugins is not a string array', async () => {
+    const presetsRoot = await createTempDir('invalid-openclaw-plugins');
+    const presetDir = path.join(presetsRoot, 'bad-preset');
+    await writePresetManifest(presetDir, {
+      name: 'bad-preset',
+      description: 'Invalid plugins field',
+      version: '1.0.0',
+      openclawPlugins: [123],
+    });
+
+    await expect(loadPreset(presetDir)).rejects.toThrow(
+      'Preset invalid field: openclawPlugins'
+    );
+  });
+
+  test('throws when openclawBootstrap.memoryIndex is not boolean', async () => {
+    const presetsRoot = await createTempDir('invalid-openclaw-bootstrap');
+    const presetDir = path.join(presetsRoot, 'bad-preset');
+    await writePresetManifest(presetDir, {
+      name: 'bad-preset',
+      description: 'Invalid bootstrap field',
+      version: '1.0.0',
+      openclawBootstrap: { memoryIndex: 'yes' },
+    });
+
+    await expect(loadPreset(presetDir)).rejects.toThrow(
+      'Preset invalid field: openclawBootstrap.memoryIndex'
+    );
   });
 });
 

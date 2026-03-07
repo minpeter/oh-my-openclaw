@@ -129,6 +129,8 @@ bunx oh-my-openclaw@latest apply apex
 - `apex` is the built-in power preset bundled with `oh-my-openclaw`.
 - Legacy config keys (e.g., top-level `identity`) are automatically migrated during apply.
 - If you see `Legacy key migration: identity → agents.list[].identity` in the output, that is normal and expected.
+- `apex` automatically ensures `openclaw-memory-auto-recall` is installed during apply, writes the matching `plugins.entries['memory-auto-recall']` config, and runs `openclaw memory index` for you.
+- After apply finishes, restart the gateway once so the freshly installed plugin and indexed memory state are live.
 
 ---
 

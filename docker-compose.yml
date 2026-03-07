@@ -1,0 +1,16 @@
+services:
+  openclaw:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    ports:
+      - "${OPENCLAW_GATEWAY_PORT:-18789}:${OPENCLAW_GATEWAY_PORT:-18789}"
+    env_file: .env
+    init: true
+    shm_size: '2gb'
+    volumes:
+      - openclaw-data:/root/.openclaw
+    restart: unless-stopped
+
+volumes:
+  openclaw-data:

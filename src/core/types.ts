@@ -1,9 +1,15 @@
+export interface OpenClawBootstrapOptions {
+  memoryIndex?: boolean;
+}
+
 export interface PresetManifest {
   author?: string;
   builtin?: boolean;
   config?: Record<string, unknown>;
   description: string;
   name: string;
+  openclawBootstrap?: OpenClawBootstrapOptions;
+  openclawPlugins?: string[];
   skills?: string[];
   tags?: string[];
   version: string;
