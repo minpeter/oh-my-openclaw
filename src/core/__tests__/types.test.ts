@@ -31,9 +31,10 @@ describe('core constants', () => {
   });
 
   test('has standard workspace files', () => {
-    expect(WORKSPACE_FILES.length).toBe(7);
+    expect(WORKSPACE_FILES.length).toBe(8);
     expect(WORKSPACE_FILES).toEqual([
       'AGENTS.md',
+      'MEMORY.md',
       'SOUL.md',
       'IDENTITY.md',
       'USER.md',

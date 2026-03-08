@@ -35,6 +35,7 @@ export const PRESERVE_IF_SET_FIELDS = [
 
 export const WORKSPACE_FILES = [
   'AGENTS.md',
+  'MEMORY.md',
   'SOUL.md',
   'IDENTITY.md',
   'USER.md',
