@@ -1,5 +1,9 @@
 # oh-my-openclaw
 
+> ⚠️ **Notice**: Development is temporarily paused due to limited availability.
+> The project will remain as-is under the MIT license.
+> Contributions are still welcome, but please expect delays in review and merging.
+
 OpenClaw configuration preset manager.
 
 ## What is this?
