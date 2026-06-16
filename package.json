@@ -46,7 +46,7 @@
     "release": "changeset publish"
   },
   "dependencies": {
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "json5": "^2.2.3",
     "picocolors": "^1.1.1"
   },
